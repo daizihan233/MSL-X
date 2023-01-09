@@ -1,0 +1,5 @@
+build
+dist
+*.ico
+LICENSE
+main.spec
