@@ -12,12 +12,13 @@ def main(page:Page):
     server_path = ''
     server_file = 'server.jar'
     server_options = '-XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs'
+    srv_opti_read_only = 1
     
     def init_page():
         
         page.title = "MSL X  Preview with Flutter(Flet)"
         page.window_height = 600
-        page.window_width = 1100
+        page.window_width = 1300
         
     def start_server(e):
         if txt_server_name.value:
@@ -36,10 +37,21 @@ def main(page:Page):
         page.add(row_ui_top)
         
         #Java与服务端路径
+        global switch_srv_opti_read_only
+        switch_srv_opti_read_only = Switch(label="只读", on_change=change_srv_opti_read_only)
+        
+        global txt_server_option
+        txt_server_option = TextField(
+        label="服务器启动参数",
+        width=300,
+        value=server_options,
+        read_only=True
+        )
+        
         global dd_choose_java
         dd_choose_java = Dropdown(
         label = "Java选择",
-        width = 100,
+        width = 150,
         options = [
             dropdown.Option("Path"),
             dropdown.Option("Choose Java File"),
@@ -50,7 +62,7 @@ def main(page:Page):
         btn_show_java_path = ElevatedButton("显示Java路径",on_click=show_java_path)
         btn_select_server_path = ElevatedButton("选取服务端路径",on_click=select_server_path)
         txt_server_name = TextField(label="服务端名称(不需要.jar后缀),默认为server",width=300,height=50)
-        row_ui_java = Row([txt_server_name,btn_select_server_path,dd_choose_java,btn_show_java_path],alignment = MainAxisAlignment.END)
+        row_ui_java = Row([switch_srv_opti_read_only,txt_server_option,txt_server_name,btn_select_server_path,dd_choose_java,btn_show_java_path],alignment = MainAxisAlignment.END)
         page.add(row_ui_java)
         
         #侧边五个摁钮
@@ -133,12 +145,87 @@ def main(page:Page):
         web.open(f"{server_path}/logs/latest.log")
         
     def about(e):
-        AlertDialog(
-        title=Text("MSLX Beta 0.01 with Flet(Flutter)\nMade by MojaveHao with ❤️"), modal=True ,open=True)
+        about = AlertDialog(
+        title=Text("MSLX Beta 0.02 with Flet(Flutter)\nMade by MojaveHao with ❤️"), modal=True ,open=True)
+        page.add(about)
+        page.update()
+        sleep(3)
+        about.open = False
         
     def help(e):
         web.open("https://mojavehao.github.io/MSL-X/#/")
-         
+        
+    def change_srv_opti_read_only(e):
+
+        nonlocal srv_opti_read_only
+        
+        def unlock_srv_opti(e):
+            nonlocal srv_opti_read_only
+            
+            def close(e):
+                nonlocal warn_change_srv_opti
+                warn_finish_change.open = False
+                warn_change_srv_opti.open = False
+                switch_srv_opti_read_only.label = "锁定"
+                txt_server_name.read_only = False
+                page.update()
+            
+            srv_opti_read_only = 0
+            
+            warn_finish_change = AlertDialog(
+            modal = False,
+            title = Text("更改服务端启动选项"),
+            content = Text("服务端启动选项已经解锁,请务必小心!"),
+            actions=[
+                TextButton("确认", on_click=close),
+            ],
+            open=True
+        )
+            page.add(warn_finish_change)
+            page.update()
+        
+        if srv_opti_read_only == 1:
+
+            def close(e):
+                warn_finish_change.open=False
+                switch_srv_opti_read_only.label = "锁定"
+                txt_server_name.read_only = True
+                page.update()
+                
+            warn_change_srv_opti = AlertDialog(
+            modal = False,
+            title = Text("更改服务端启动选项"),
+            content = Text("如果您知道自己正在做什么,并且自行承担此操作带来的所有责任,请点击'继续更改';否则,请点击'取消'"),
+            actions = [
+                TextButton("继续更改", on_click=unlock_srv_opti),
+                TextButton("取消", on_click=close),
+            ],
+            open=True
+        )
+            page.add(warn_change_srv_opti)
+            page.update()
+            
+        if srv_opti_read_only == 0:
+            srv_opti_read_only = 1
+            def close(e):
+                warn_finish_change.open=False
+                switch_srv_opti_read_only.label = "解锁"
+                txt_server_name.read_only = True
+                page.update()
+            
+            srv_opti_read_only = 0
+            warn_finish_change = AlertDialog(
+            modal = False,
+            title = Text("更改服务端启动选项"),
+            content=ft.Text("服务端启动选项已经锁定"),
+            actions=[
+                ft.TextButton("确认", on_click=close),
+            ],
+            open=True
+        )
+            page.add(warn_finish_change)
+            page.update()
+            
     init_page()
     create_controls()
     page.update()
