@@ -3,3 +3,6 @@ dist
 *.ico
 LICENSE
 main.spec
+main.build
+main.dist
+change_imgs

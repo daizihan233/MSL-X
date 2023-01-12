@@ -67,9 +67,9 @@ def main(page:Page):
         
         #侧边五个摁钮
         btn_log = ElevatedButton("日志",on_click=open_log)
-        btn_frp = ElevatedButton("映射")
+        btn_frp = ElevatedButton("映射",on_click=open_frpc)
         btn_about = ElevatedButton("关于",on_click=about)
-        btn_help = ElevatedButton("帮助")
+        btn_help = ElevatedButton("文档",on_click=msl_help)
         btn_setting = ElevatedButton("设置")
         column_ui_left = Column(controls=
        [btn_log,
@@ -146,13 +146,14 @@ def main(page:Page):
         
     def about(e):
         about = AlertDialog(
-        title=Text("MSLX Beta 0.02 with Flet(Flutter)\nMade by MojaveHao with ❤️"), modal=True ,open=True)
+        title=Text("MSLX Beta 0.02 with Flet(Flutter)\nMade by MojaveHao with ❤️\n特别鸣谢:\n\t-Frp节点提供:终末、谎言"), modal=True ,open=True)
         page.add(about)
         page.update()
         sleep(3)
         about.open = False
+        page.update()
         
-    def help(e):
+    def msl_help(e):
         web.open("https://mojavehao.github.io/MSL-X/#/")
         
     def change_srv_opti_read_only(e):
@@ -167,7 +168,7 @@ def main(page:Page):
                 warn_finish_change.open = False
                 warn_change_srv_opti.open = False
                 switch_srv_opti_read_only.label = "锁定"
-                txt_server_name.read_only = False
+                txt_server_option.read_only = False
                 page.update()
             
             srv_opti_read_only = 0
@@ -187,9 +188,9 @@ def main(page:Page):
         if srv_opti_read_only == 1:
 
             def close(e):
-                warn_finish_change.open=False
+                warn_change_srv_opti.open=False
                 switch_srv_opti_read_only.label = "锁定"
-                txt_server_name.read_only = True
+                txt_server_option.read_only = True
                 page.update()
                 
             warn_change_srv_opti = AlertDialog(
@@ -210,21 +211,23 @@ def main(page:Page):
             def close(e):
                 warn_finish_change.open=False
                 switch_srv_opti_read_only.label = "解锁"
-                txt_server_name.read_only = True
+                txt_server_option.read_only = True
                 page.update()
             
-            srv_opti_read_only = 0
             warn_finish_change = AlertDialog(
             modal = False,
             title = Text("更改服务端启动选项"),
-            content=ft.Text("服务端启动选项已经锁定"),
+            content = Text("服务端启动选项已经锁定"),
             actions=[
-                ft.TextButton("确认", on_click=close),
+                TextButton("确认", on_click=close),
             ],
             open=True
         )
             page.add(warn_finish_change)
             page.update()
+            
+    def open_frpc(e):
+        sp.run(['python','frpconfig.py'])
             
     init_page()
     create_controls()
