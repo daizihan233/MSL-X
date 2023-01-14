@@ -21,12 +21,10 @@ def frpconfig(page:Page):
             label = "节点选择",
             options=[
             dropdown.Option("上海1"),
-            dropdown.Option("广州腾讯云[不支持SRV]"),
             dropdown.Option("香港"),
             dropdown.Option("北京[付费]"),
             dropdown.Option("广州[付费]"),
             dropdown.Option("上海2[付费]"),
-            dropdown.Option("宿迁[应急]"),
             ],
             width=500
         )
@@ -45,6 +43,8 @@ def frpconfig(page:Page):
             dropdown.Option("TCP(Java)"),
             dropdown.Option("UDP(Bedrock)"),
             dropdown.Option("TCP+UDP(互通服用)"),
+            dropdown.Option("KCP(仅付费节点可用)"),
+            dropdown.Option("QUIC(仅付费节点可用)")
         ]
         )
         btn_start_frpc = ElevatedButton("启动映射",on_click=start_frpc)
@@ -58,7 +58,41 @@ def frpconfig(page:Page):
         page.update()
         
     def start_frpc(e):
-        pass
+        
+        node_list = ["sh1","hk","bj","gz","sh2"]
+        if dd_node.value == "上海1":
+            node = node_list[0]
+        if dd_node.value == "香港":
+            node = node_list[1]
+        if dd_node.value == "北京[付费]":
+            node = node_list[2]
+        if dd_node.value == "广州[付费]":
+            node = node_list[3]
+        if dd_node.value == "上海2[付费]":
+            node = node_list[4]
+            
+        protocol_list = ["tcp","udp","tcp+udp","kcp","quic"]
+        
+        frpc_config = f'\
+        [common]\n\
+        server_port=7000\n\
+        server_addr={node}.qwq.one \n\
+        user={user}\n\
+        meta_token=20021120\n\
+        protocol={protocol}\n\
+\
+        {user}TCP\n\
+        type=tcp\n\
+        local_ip=127.0.0.1\n\
+        local_port={port}\n\
+        remote_port={remote_port}\n\
+\
+        {user}UDP\n\
+        type=udp\n\
+        local_ip=127.0.0.1\n\
+        local_port={port}\n\
+        remote_port={remote_port}\n\
+'
 
     init_page()
     create_controls()

@@ -3,6 +3,8 @@ from flet import *
 import subprocess as sp
 import os
 import webbrowser as web
+import psutil
+import math
 
 def main(page:Page):
     
@@ -13,12 +15,19 @@ def main(page:Page):
     server_file = 'server.jar'
     server_options = '-XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs'
     srv_opti_read_only = 1
+    vsmem = psutil.virtual_memory()
+    xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
     
     def init_page():
         
         page.title = "MSL X  Preview with Flutter(Flet)"
         page.window_height = 600
-        page.window_width = 1300
+        page.window_width = 1200
+        page.fonts = {
+        "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
+        "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
+    }
+        page.theme = Theme(font_family="SHS_SC")
         
     def start_server(e):
         if txt_server_name.value:
@@ -62,7 +71,36 @@ def main(page:Page):
         btn_show_java_path = ElevatedButton("显示Java路径",on_click=show_java_path)
         btn_select_server_path = ElevatedButton("选取服务端路径",on_click=select_server_path)
         txt_server_name = TextField(label="服务端名称(不需要.jar后缀),默认为server",width=300,height=50)
-        row_ui_java = Row([switch_srv_opti_read_only,txt_server_option,txt_server_name,btn_select_server_path,dd_choose_java,btn_show_java_path],alignment = MainAxisAlignment.END)
+        
+        global sli_xms
+        global sli_xmx
+        sli_xms = Slider(label="最小内存(G)",width=500,divisions=xmx-1,min=1,max=xmx,on_change=change_xms)
+        sli_xmx = Slider(label="最大内存(G)",width=500,divisions=xmx-xms,min=1,max=xmx,on_change=change_xmx)
+        
+        global text_xms
+        global text_xmx
+        text_xms = Text(f"最小内存:{xms}G")
+        text_xmx = Text(f"最大内存:{xmx}G")
+        
+        row_ui_java = Column(
+            controls=[
+                Row(controls=
+                    [switch_srv_opti_read_only,
+                        txt_server_option,
+                        txt_server_name,
+                        btn_select_server_path,
+                        dd_choose_java,
+                        btn_show_java_path],
+                    alignment = MainAxisAlignment.END),
+                Column(controls=[
+                    Row(controls=[
+                        text_xms,
+                        text_xmx]),
+                    Row(controls=[
+                        sli_xms,
+                        sli_xmx])
+            ]
+        )])
         page.add(row_ui_java)
         
         #侧边五个摁钮
@@ -145,8 +183,15 @@ def main(page:Page):
         web.open(f"{server_path}/logs/latest.log")
         
     def about(e):
+        title = Markdown(
+        '''
+# MSLX Beta 0.03 with Flet(Flutter)\n\
+## Made by MojaveHao with ❤️\n\
+## 特别鸣谢:\n\
+- Frp节点提供:终末、谎言
+        ''')
         about = AlertDialog(
-        title=Text("MSLX Beta 0.02 with Flet(Flutter)\nMade by MojaveHao with ❤️\n特别鸣谢:\n\t-Frp节点提供:终末、谎言"), modal=True ,open=True)
+        title=title, modal=True ,open=True)
         page.add(about)
         page.update()
         sleep(3)
@@ -228,9 +273,21 @@ def main(page:Page):
             
     def open_frpc(e):
         sp.run(['python','frpconfig.py'])
+        
+    def change_xms(e):
+        nonlocal xms
+        xms = math.floor(sli_xms.value)
+        text_xms.value = f"最小内存:{xms}G"
+        page.update()
+        
+    def change_xmx(e):
+        nonlocal xmx
+        xmx = math.floor(sli_xmx.value)
+        text_xmx.value = f"最大内存:{xmx}G"
+        page.update()
             
     init_page()
     create_controls()
     page.update()
     
-flet.app(target=main)
+flet.app(target=main,assets_dir="assets",port=10240)
