@@ -1,8 +1,7 @@
-PySide6
-tqdm
+flet
 requests
 multitasking
 retry
 psutil
-nuitka
+pyinstaller
 httpx

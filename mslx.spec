@@ -5,10 +5,14 @@ block_cipher = None
 
 
 a = Analysis(
-    ['main.py'],
-    pathex=[],
+    ['main.py',
+    'settings.py',
+    'frpconfig.py',
+    'lib\\create_settings.py',
+    'lib\\download.py'],
+    pathex=["C:\\Users\\HTTco\\OneDrive\\桌面\\MSLX_Beta"],
     binaries=[],
-    datas=[],
+    datas=[('assets','assets')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -29,7 +33,7 @@ exe = EXE(
     a.datas,
     [],
     name='mslx',
-    debug=False,
+    debug=True,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
@@ -41,6 +45,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='C:\\Users\\HTTco\\AppData\\Local\\Temp\\55f4cc8a-0171-4d6d-8610-00ebcd3c83bb',
     icon=['logo.png'],
 )

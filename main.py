@@ -2,9 +2,12 @@ import flet
 from flet import *
 import subprocess as sp
 import os
+import sys
 import webbrowser as web
 import psutil
 import math
+
+from lib.create_settings import *
 
 def main(page:Page):
     
@@ -18,6 +21,10 @@ def main(page:Page):
     vsmem = psutil.virtual_memory()
     xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
     
+    config_path = Path("./Config/")
+    if not config_path.exists():
+        os.mkdir(config_path)
+    
     def init_page():
         
         page.title = "MSL X  Preview with Flutter(Flet)"
@@ -30,11 +37,23 @@ def main(page:Page):
         page.theme = Theme(font_family="SHS_SC")
         
     def start_server(e):
+        if xms > xmx:
+            warn_ram = AlertDialog(
+                title=Text("警告"),
+                content=Text("最小内存不能大于最大内存"),
+                open=True,modal=True)
+            page.add(warn_ram)
+            page.update()
+            sleep(1.5)
+            warn_ram.open = False
+            page.update()
+            return
         if txt_server_name.value:
             server_file = txt_server_name.value + ".jar"
         else:
             server_file = 'server.jar'
-        server = server_path + os.sep + server_file
+        if server_path:
+            server = server_path + os.sep + server_file
         print(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}")
         sp.run(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",check=True,shell=True,cwd=server_path)
         
@@ -82,7 +101,7 @@ def main(page:Page):
         text_xms = Text(f"最小内存:{xms}G")
         text_xmx = Text(f"最大内存:{xmx}G")
         
-        row_ui_java = Column(
+        ui_main = Column(
             controls=[
                 Row(controls=
                     [switch_srv_opti_read_only,
@@ -101,9 +120,9 @@ def main(page:Page):
                         sli_xmx])
             ]
         )])
-        page.add(row_ui_java)
+        page.add(ui_main)
         
-        #侧边五个摁钮
+        #侧边摁钮
         btn_log = ElevatedButton("日志",on_click=open_log)
         btn_frp = ElevatedButton("映射",on_click=open_frpc)
         btn_about = ElevatedButton("关于",on_click=about)
@@ -116,6 +135,17 @@ def main(page:Page):
         btn_help,
         btn_setting])
         page.add(column_ui_left)
+        
+        #底部摁钮
+        btn_save_config = ElevatedButton("保存服务器配置",on_click=save_config)
+        btn_load_config = ElevatedButton("加载服务器配置",on_click=load_config)
+        row_bottom = Row(
+            controls=[
+                btn_save_config,
+                btn_load_config
+            ]
+        )
+        page.add(row_bottom)
         
         page.update()
         
@@ -285,9 +315,104 @@ def main(page:Page):
         xmx = math.floor(sli_xmx.value)
         text_xmx.value = f"最大内存:{xmx}G"
         page.update()
+        
+    def save_config(e):
+        nonlocal server_file, server_path, use_java
+        
+        def save_conf(e):
+            nonlocal server_file, server_path, use_java, txt_config_name, txt_config_describe
+            
+            def close(e):
+                warn_save_successful.open = False
+            
+            name = txt_config_name.value
+            describe = txt_config_describe.value
+            create_conf(name, server_file, server_path, use_java, describe)
+            page.update()
+            
+        def close(e):
+            warn_save_conf.open = False
+            page.update()
+        
+        text_title = Text("配置文件设置")
+        txt_config_name = TextField(label="配置名称(不要含有中文和特殊符号)",value="Default")
+        txt_config_describe = TextField(label="配置注释")
+        column_save_opti = Column(
+            controls=[
+                text_title,
+                txt_config_name,
+                txt_config_describe,
+                Row(
+                    controls=[
+                        TextButton("确认保存", on_click=save_conf),
+                        TextButton("取消", on_click=close)
+                    ]
+                )
+                
+            ]
+        )
+        bs_save_conf = BottomSheet(
+            content = column_save_opti,
+            open = True,
+        )
+        page.add(bs_save_conf)
+        page.update()
+    
+    def load_config(e):
+        global name
+        nonlocal server_path,server_file,use_java
+        dict_tmp_conf = {}
+        
+        def load_conf(e):
+            
+            def close(e):
+                bs_load_conf_view.open = False
+                
+            def load(e):
+                nonlocal server_path,server_file,use_java,dict_tmp_conf
+                server_file = dict_tmp_conf["server"]
+                server_path = dict_tmp_conf["path"]
+                use_java = dict_tmp_conf["java"]
+            
+            nonlocal dict_tmp_conf,bs_load_conf_name
+            dict_tmp_conf = conf_load(name)
+            bs_load_conf_name.open=False
+            text_info = Text(f"配置文件{name}.json信息:{dict_tmp_conf}")
+            btn_load = TextButton("确认加载",on_click=load)
+            btn_cannel = TextButton("取消",on_click=close)
+            col_info = Column(
+                controls=[
+                    text_info,
+                    btn_load,
+                    btn_cannel
+                ]
+            )
+            bs_load_conf_view = BottomSheet(
+                content=text_info
+            ) 
+            page.add(bs_load_conf_view)
+            page.update()
+            
+        txt_load_name = TextField(label="配置文件名称",value="Default")
+        name = txt_load_name.value
+
+        btn_load = TextButton("加载",on_click=load_conf)
+        col_load_opti = Column(
+            controls=[
+                txt_load_name,
+                btn_load
+            ]
+        )
+        bs_load_conf_name = BottomSheet(
+            content=col_load_opti,
+            open=True
+        )
+        page.add(bs_load_conf_name)
+        page.update()
+        
             
     init_page()
     create_controls()
     page.update()
     
-flet.app(target=main,assets_dir="assets",port=10240)
+flet.app(target=main,assets_dir="assets",)

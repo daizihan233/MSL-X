@@ -1,1 +1,1 @@
-flet pack main.py --icon logo.png --product-name MSLX --product-version Beta0.1 --file-description MSLXBeta --copyright MojaveHao
+pyinstaller mslx.spec
