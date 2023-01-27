@@ -6,8 +6,8 @@ block_cipher = None
 
 a = Analysis(
     ['main.py',
-    'settings.py',
-    'frpconfig.py',
+    'ui\\settings.py',
+    'ui\\frpconfig.py',
     'lib\\create_settings.py',
     'lib\\download.py'],
     pathex=["C:\\Users\\HTTco\\OneDrive\\桌面\\MSLX_Beta"],
