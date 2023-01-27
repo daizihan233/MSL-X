@@ -1,3 +1,10 @@
+name:auto_build
+
+on:
+  push:
+    branches:
+    - '*'
+
 jobs:
 
   build_on_windows:
