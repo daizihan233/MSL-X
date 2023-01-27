@@ -15,19 +15,14 @@ jobs:
         with:
           python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-          cache: 'pip'
-          cache-dependency-path: |
-            **/pipreq*
             
       - name: Install Dependencies
         run: |
-          pip install -r pipreq
+          pip install flet,requests,multitasking,retry,psutil,pyinstaller,httpx
           
-      - Name: Build Executable
-        uses: Nuitka/Nuitka-Action@v0.4
-        with:
-          script-name: kasa_cli
-          onefile: true
+      - name: Build Executable
+        run: |
+          pyinstaller mslx.spec
   
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
