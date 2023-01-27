@@ -1,3 +1,5 @@
+
+
 on:
   push:
     branches:
@@ -45,7 +47,7 @@ jobs:
           pip install flet requests multitasking retry psutil pyinstaller httpx
       - name: Run pyinstaller
         run: |
-          python -m PyInstaller mslx.spec
+          python -m PyInstaller mslx_unix.spec
       - uses: actions/upload-artifact@v2
         with:
           name: app
@@ -68,7 +70,7 @@ jobs:
           pip install flet requests multitasking retry psutil pyinstaller httpx
       - name: Run pyinstaller
         run: |
-          python -m PyInstaller mslx.spec
+          python -m PyInstaller mslx_unix.spec
       - uses: actions/upload-artifact@v2
         with:
           name: app
