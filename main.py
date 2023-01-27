@@ -2,7 +2,6 @@ import flet
 from flet import *
 import subprocess as sp
 import os
-import sys
 import webbrowser as web
 import psutil
 import math
@@ -302,7 +301,7 @@ def main(page:Page):
             page.update()
             
     def open_frpc(e):
-        sp.run(['python','frpconfig.py'])
+        pass
         
     def change_xms(e):
         nonlocal xms

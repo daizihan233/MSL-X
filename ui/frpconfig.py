@@ -4,7 +4,10 @@ import subprocess as sp
 import random
 import requests
 import platform
+
+sys.path.append('..')
 from lib.download import download
+
 def frpconfig(page:Page):
     
     node = ''
@@ -132,5 +135,3 @@ def frpconfig(page:Page):
     init_page()
     create_controls()
     page.update()
-
-flet.app(target=frpconfig,port=10242,assets_dir="assets")
