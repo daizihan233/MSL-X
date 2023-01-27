@@ -28,8 +28,6 @@ jobs:
           path: |
             build/*.exe
   
-    runs-on: macos-latest
-  
   build_on_macos:
 
   runs-on: macos-latest
