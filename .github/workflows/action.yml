@@ -24,7 +24,7 @@ jobs:
           pip install flet requests multitasking retry psutil pyinstaller httpx nuitka
       - name: Run Nuitka
         run: |
-          nuitka main.py --standone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
+          nuitka main.py --standalone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
       - uses: actions/upload-artifact@v2
         with:
           name: app
@@ -47,7 +47,7 @@ jobs:
           pip install flet requests multitasking retry psutil pyinstaller httpx nuitka
       - name: Run Nuitka
         run: |
-          sudo python3 -m nuitka main.py --standone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
+          sudo python3 -m nuitka main.py --standalone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
       - uses: actions/upload-artifact@v2
         with:
           name: app
@@ -70,7 +70,7 @@ jobs:
           pip install flet requests multitasking retry psutil pyinstaller httpx nuitka
       - name: Run Nuitka
         run: |
-          sudo python3 -m nuitka main.py --standone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
+          sudo python3.10 -m nuitka main.py --standalone --onefile --assume-yes-for-downloads --follow-stdlib --show-scons --show-progress --show-memory --include-data-dir='/Config=Config' --include-data-dir='/lib=lib' --include-data-dir='/ui=ui' --include-data-dir='/assets=assets'
       - uses: actions/upload-artifact@v2
         with:
           name: app
