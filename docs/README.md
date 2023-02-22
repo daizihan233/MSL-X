@@ -13,7 +13,7 @@
 
 - 如果您是Python3.x：
 
-    - Python3.7以上可以直接跳到下载PySide6一节
+    - Python3.7以上可以直接跳到下载运行环境一节
 
     - Python3.7以下可以查看[教程](https://cloud.tencent.com/developer/article/1565853)或自己折腾
 	
@@ -208,9 +208,16 @@ Open Source License:GNU Affero Genral Public License v3([View at there](https://
 
 ## More
 
+不鼓励且不支持所有商业用途
+未经许可，任何人不得将本文开头关于MSLX名称由来介绍的图片、图标或原文用于商业目的或项目首页，或其他未经授权的行为。
+
+衍生软件需要声明引用
+如果在没有修改的情况下引用了 MSL-X 分发包，则派生项目应在描述的任何位置提及 MSLX 的使用。
+如果修改并重新发布 MSL-X 源代码，或发布其他项目参考 MSL-X 的内部实现，则必须在文章开头或“MSL- X'相关内容最先出现（https://github.com/MojaveHao/MSL-X）。 不得歪曲或隐藏它是免费和开源的事实。
+
 Discourages and does not support all commercial use
 Without permission, no one may use images and icons, or the original text of the introduction about the origin of the name MSLX at the beginning of this article, for commercial purposes or on the homepage of the project, or other unauthorized acts.
 
 Derivative software needs to declare reference
 If the MSL-X distribution package is referenced without modifying it, the derived project should mention the use of MSLX anywhere in the description.
-If the MSL-X source code is modified and republished, or another project is published with reference to the internal implementation of MSL-X, the derivative project must be clearly declared from this repository at the beginning of the article or where the 'MSL-X' related content first appears (https: //github.com/NTFS2020/MSL-X). The fact that it is free and open source must not be distorted or hidden.
+If the MSL-X source code is modified and republished, or another project is published with reference to the internal implementation of MSL-X, the derivative project must be clearly declared from this repository at the beginning of the article or where the 'MSL-X' related content first appears (https: //github.com/MojaveHao/MSL-X). The fact that it is free and open source must not be distorted or hidden.
