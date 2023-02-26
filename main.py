@@ -5,6 +5,9 @@ import os
 import webbrowser as web
 import psutil
 import math
+import random
+import requests
+import json
 
 from lib.create_settings import *
 
@@ -19,6 +22,8 @@ def main(page:Page):
     srv_opti_read_only = 1
     vsmem = psutil.virtual_memory()
     xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
+    hitokoto_html = requests.get(url="https://v1.hitokoto.cn/?c=i&encode=json&charset=utf-8")
+    hitokoto = json.loads(hitokoto_html.text)
     
     config_path = Path("./Config/")
     if not config_path.exists():
@@ -26,9 +31,11 @@ def main(page:Page):
     
     def init_page():
         
-        page.title = "MSL X  Preview with Flutter(Flet)"
-        page.window_height = 600
-        page.window_width = 1200
+        nonlocal hitokoto
+        text = hitokoto["hitokoto"][:-1]
+        page.title = f"MSLX | {text} |"
+        page.window_height = 650
+        page.window_width = 1250
         page.fonts = {
         "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
         "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
@@ -57,6 +64,58 @@ def main(page:Page):
         sp.run(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",check=True,shell=True,cwd=server_path)
         
     def create_controls():#设置控件
+        
+        nonlocal nav_side_change
+        
+        #侧边栏
+        nav_side = NavigationRail(
+        selected_index=0,
+        #label_type=None,
+        #extended=True,
+        height=450,
+        min_width=60,
+        min_extended_width=400,
+        group_alignment=-0.9,
+        on_change=nav_side_change,
+        destinations=[
+            NavigationRailDestination(
+                icon=icons.HOME, 
+                label="主页"
+            ),
+            NavigationRailDestination(
+                icon=icons.HISTORY,
+                label="日志"
+            ),
+            NavigationRailDestination(
+                icon=icons.APPS, 
+                label="内网穿透"
+            ),
+            NavigationRailDestination(
+                icon=icons.DOCUMENT_SCANNER,
+                label="文档"
+            ),
+            NavigationRailDestination(
+                icon=icons.INFO,
+                label="信息"
+            ),
+            NavigationRailDestination(
+                icon=icons.SETTINGS,
+                label="设置"
+            ),
+            NavigationRailDestination(
+                icon=icons.INSERT_DRIVE_FILE,
+                label="配置文件"
+            ),
+            #NavigationRailDestination(
+            #    icon=icons.FILE_UPLOAD_OUTLINED,
+            #    label="加载配置文件"
+            #),
+            #NavigationRailDestination(
+            #    icon=icons.FILE_DOWNLOAD,
+            #    label="保存配置文件"
+            #),
+        ],)
+
         
         #开启服务器摁钮
         btn_start_server = ElevatedButton("开启服务器",width = 700,on_click=start_server)
@@ -100,28 +159,34 @@ def main(page:Page):
         text_xms = Text(f"最小内存:{xms}G")
         text_xmx = Text(f"最大内存:{xmx}G")
         
-        ui_main = Column(
-            controls=[
-                Row(controls=
-                    [switch_srv_opti_read_only,
-                        txt_server_option,
-                        txt_server_name,
-                        btn_select_server_path,
-                        dd_choose_java,
-                        btn_show_java_path],
-                    alignment = MainAxisAlignment.END),
-                Column(controls=[
-                    Row(controls=[
-                        text_xms,
-                        text_xmx]),
-                    Row(controls=[
-                        sli_xms,
-                        sli_xmx])
+        nonlocal hitokoto
+        btn_hitokoto = TextButton(hitokoto["hitokoto"],on_click=open_hitokoto)
+        
+        ui_main = Row(
+            controls = [nav_side,Column(    
+                controls=[
+                    Row(controls=
+                        [switch_srv_opti_read_only,
+                            txt_server_option,
+                            txt_server_name,
+                            btn_select_server_path,
+                            dd_choose_java,
+                            btn_show_java_path],
+                        alignment = MainAxisAlignment.END),
+                    Column(controls=[
+                        Row(controls=[
+                            text_xms,
+                            text_xmx]),
+                        Row(controls=[
+                            sli_xms,
+                            sli_xmx])
             ]
-        )])
+        ),btn_hitokoto])])
         page.add(ui_main)
         
+        '''
         #侧边摁钮
+        
         btn_log = ElevatedButton("日志",on_click=open_log)
         btn_frp = ElevatedButton("映射",on_click=open_frpc)
         btn_about = ElevatedButton("关于",on_click=about)
@@ -133,8 +198,8 @@ def main(page:Page):
         btn_about,
         btn_help,
         btn_setting])
-        page.add(column_ui_left)
         
+
         #底部摁钮
         btn_save_config = ElevatedButton("保存服务器配置",on_click=save_config)
         btn_load_config = ElevatedButton("加载服务器配置",on_click=load_config)
@@ -144,7 +209,7 @@ def main(page:Page):
                 btn_load_config
             ]
         )
-        page.add(row_bottom)
+        '''
         
         page.update()
         
@@ -208,27 +273,38 @@ def main(page:Page):
         page.update()
         picker.get_directory_path(dialog_title="选择服务端路径")
         
-    def open_log(e):
-        web.open(f"{server_path}/logs/latest.log")
+    def nav_side_change(e):
+             
+        def open_log():
+            web.open(f"{server_path}/logs/latest.log")
+            
+        def about():
+            title = Markdown(
+            '''
+    # MSLX Beta 0.06 with Flet(Flutter)\n\
+    ## Made by MojaveHao with ❤️\n\
+    - Frp节点提供:终末、谎言
+    - 一言:
+            ''')
+            about = AlertDialog(
+            title=title, modal=True ,open=True)
+            page.add(about)
+            page.update()
+            sleep(3)
+            about.open = False
+            page.update()
+            
+        def msl_help():
+            web.open("https://mojavehao.github.io/MSL-X/#/")
+            
+        def open_frpc():
+            pass
         
-    def about(e):
-        title = Markdown(
-        '''
-# MSLX Beta 0.03 with Flet(Flutter)\n\
-## Made by MojaveHao with ❤️\n\
-## 特别鸣谢:\n\
-- Frp节点提供:终末、谎言
-        ''')
-        about = AlertDialog(
-        title=title, modal=True ,open=True)
-        page.add(about)
-        page.update()
-        sleep(3)
-        about.open = False
-        page.update()
+        def open_settings():
+            pass
         
-    def msl_help(e):
-        web.open("https://mojavehao.github.io/MSL-X/#/")
+        def server_conf():
+            pass
         
     def change_srv_opti_read_only(e):
 
@@ -299,9 +375,6 @@ def main(page:Page):
         )
             page.add(warn_finish_change)
             page.update()
-            
-    def open_frpc(e):
-        pass
         
     def change_xms(e):
         nonlocal xms
@@ -408,6 +481,10 @@ def main(page:Page):
         )
         page.add(bs_load_conf_name)
         page.update()
+        
+    def open_hitokoto(e):
+        uuid = hitokoto["uuid"]
+        web.open(f"https://hitokoto.cn?uuid={uuid}")
         
             
     init_page()
