@@ -1,6 +1,9 @@
 import json
 import os
-import Config
+import sys
+
+sys.path.append("..") 
+from Config import *
 
 def create_conf(name,server_name,server_path,java_path,describe):
     dict_setting = {

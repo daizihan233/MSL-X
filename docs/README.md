@@ -1,12 +1,16 @@
 # 使用前
 
-> 这篇文档是为了Linux用户而准备的，请某些人高抬贵手别和我杠"怎么Windows只提了一嘴"
+> 这篇文档的Linux部分除Arch特编外皆以Ubuntu 22.04 LTS为基础
+>
+> Arch特编部分如无特殊要求皆使用root用户身份执行
+>
+> > yay和makepkg部分请用普通用户执行(如用root则可能会对系统造成不可挽回的破坏)
 
 ## 下载运行环境
 
 ### Python
 
-- Linux(命令行安装，请准备好sudo权限)
+- Linux(命令行安装，请准备好sudo/root权限)
 现在请您先输入python --version查看现存Python版本，3.6以下都不可以运行
 
 - 如果您是Python2.x，请在终端输入sudo apt remove --auto-remove python2.x 来移除Python(把x换成后面的版本号)，然后按照Python3.x-Python3.7以下处理
@@ -18,53 +22,53 @@
     - Python3.7以下可以查看[教程](https://cloud.tencent.com/developer/article/1565853)或自己折腾
 	
 	- Windows/macOS(官网直接下载安装包安装)
-		- Windows前往[Python官网](https://www.python.org/downloads/windows/)
-		- macOS前往[Python官网](https://www.python.org/downloads/macos/)
-		- Windows用户下载Windows installer(64-bit)
+		- Windows前往[这里](https://www.python.org/downloads/windows/)
+		- macOS前往[这里](https://www.python.org/downloads/macos/)
+		- Windows用户下载Windows installer(64-bit)，切记安装时要在下方勾选"Add Python 3.xx.x to Path"
 		- macOS用户下载macOS 64-bit universal2 installer
     
-    - Arch特编
-	    - 首先恭喜您选择了Arch Linux！（没收广告费啊）
-    
-	    - 由于最新版本的Arch Linux已经停止了Python3.7以前版本的支持，本文不做说明
-    
-        -  事实上，您只需要运行以下命令，这会安装Python3.10.4：
-	    ```pacman -S python```
+#### Arch特编
+##### 您只需要运行以下命令，便可安装Python3.10：
+
+```pacman -S python```
+##### 其他:
+- 恭喜您选择了Arch Linux!
+
+- 由于最新版本的Arch Linux已经停止了Python3.7以前版本的支持，本文不做说明
+
+- 如果您希望使用Python311，请您使用AUR：
+  - [Python311 on AUR](https://aur.archlinux.org/packages/python311)
+
+  - [AUR](https://wiki.archlinux.org/title/Arch_User_Repository)
+
+  - [Pacman](https://wiki.archlinuxcn.org/wiki/Pacman)
+
+- 作为一个老练的Arch Linux用户，您应该知道怎么使用
+
+- 使用yay
+	- 安装
+		- 以root账户执行下列命令：
+		```
+		pacman -S git go base-devel
+		git clone https://aur.archlinux.org/yay.git
+		cd yay
+		```
+		再切换到一个非root用户来执行makepkg：
+		```
+		su xxx(用户名)
+		makepkg -si
+		```
+		
+	- 使用
 	
-		 - 如果您希望使用Python311，请您使用AUR：
-			- [Python311 on AUR](https://aur.archlinux.org/packages/python311)
-	
-			- [AUR](https://wiki.archlinux.org/title/Arch_User_Repository)
-	
-			- [Pacman](https://wiki.archlinuxcn.org/wiki/Pacman)
-	
-			- 作为一个老练的Arch Linux用户，您应该知道怎么使用
-			
-			- 对于纯萌新，我们向您介绍yay
-				- 安装
-					- 以root账户执行下列命令：
-					```
-					pacman -S git go base-devel
-					git clone https://aur.archlinux.org/yay.git
-					cd yay
-					makepkg -si
-					```
-					
-				- 使用
-				
-					- 它的语法和pacman一致。
-					- 示例：您可以通过以下语句来安装Python3.11:
-						```yay -s python311```
+		- 它的语法和pacman一致。
+		- 示例：您可以通过以下语句来安装Python3.11:
+			```yay -s python311```
 
+### 如果您已经配置好了Python3.7(或更高)环境，请在终端执行pip install -r requirements.txt以安装依赖
 
-
-### Flet和其他运行环境
-
-- 如果您已经配置好了Python3.7(或更高)环境，请在终端执行pip -r pipreq以安装依赖
-
-	- 注：此处请保证终端的路径处于我们的项目文件根目录
-
-	- 注2：如果您正在使用Linux请将pip替换为sudo pip3
+#### 注：此处请保证终端的路径处于我们的项目文件根目录
+#### 注2：如果您正在使用Linux请将pip替换为sudo pip3
 
 ### Java
 > 虽然开服器本身并不需要Java，可Java是开服的必需品，所以在此一并列出其下载方式（仅针对Linux）
@@ -72,7 +76,8 @@
 
 ##### 如您的发行版可以使用apt，请按照您的情况选择命令（必须要有root权限，推荐直接复制）：
 
-- 首先，更新您的下载源:```sudo apt update && sudo apt upgrade -y```
+- 首先，更新您的下载源:
+- ```sudo apt update && sudo apt upgrade -y```
 - Java17：```sudo apt install openjdk-17-jdk -y```
 - Java16：```sudo apt install openjdk-16-jdk -y```
 - Java8：```sudo apt install openjdk-8-jdk -y```
@@ -88,8 +93,14 @@
 - [Java7下载](https://www.oracle.com/java/technologies/javase/javase7-archive-downloads.html)
 - [Deepin安装Java17示例](https://bbs.deepin.org/post/236160)
 - [命令行安装deb包教程](https://blog.csdn.net/oMcLin/article/details/108725325)
+- 
 #### Arch特编
+
+更新镜像源:
+```pacman -Syyu```
+
 ##### OpenJDK安装
+
 - JDK18(jdk18-openjdk)[AUR](https://aur.archlinux.org/packages/jdk18-openjdk)
 - JDK16(jdk16-openjdk)[AUR](https://aur.archlinux.org/packages/jdk16-openjdk)
 - JDK8(jdk8-openjdk-shenandoah)[AUR](https://aur.archlinux.org/packages/jdk8-openjdk-shenandoah)
@@ -130,7 +141,7 @@
 
 - ```/ban <玩家名/玩家IP地址>  封禁玩家名/玩家IP地址```
 	
-- ```/tick <玩家名/玩家IP地址>  临时踢出玩家名/玩家IP地址```
+- ```/kick <玩家名/玩家IP地址>  临时踢出玩家名/玩家IP地址```
 
 ### server.properties中部分常用配置翻译
 

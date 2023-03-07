@@ -10,9 +10,11 @@ import requests
 import json
 
 from lib.create_settings import *
+import Custom
 
 def main(page:Page):
     
+    Custom.before_run()
     use_java = 'java'#保存Java路径，为'JAVA'时使用环境变量(默认)
     xms = 1#G省略
     xmx = 4
@@ -25,9 +27,13 @@ def main(page:Page):
     hitokoto_html = requests.get(url="https://v1.hitokoto.cn/?c=i&encode=json&charset=utf-8")
     hitokoto = json.loads(hitokoto_html.text)
     
-    config_path = Path("./Config/")
+    '''
+    config_path = os.Path("./Config/")
     if not config_path.exists():
         os.mkdir(config_path)
+    '''
+    
+    Custom.after_run()
     
     def init_page():
         
@@ -264,7 +270,7 @@ def main(page:Page):
                 title=Text("选择服务端路径失败,请重新选择"), modal=True ,open=True)
                 page.add(alert_warn_not_chosed_java)
                 page.update()
-                sleep(3)
+                time.sleep(3)
                 alert_warn_not_chosed_java.open = False
                 page.update()
         
