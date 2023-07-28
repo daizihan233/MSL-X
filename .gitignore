@@ -1,6 +1,13 @@
 build
 dist
 *.ico
+*.pyc
+build.cmd
+clr.cmd
+nuitka_pack.cmd
+mslx.spec
+mslx_unix.spec
+logs
 LICENSE
 main.spec
 main.build

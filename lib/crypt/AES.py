@@ -35,7 +35,7 @@ def AES_encrypt(org_str,key):
     encrypt_aes = aes.encrypt(cut_value(org_str))
     # 用base64转成字符串形式
     encrypted_text = str(base64.encodebytes(encrypt_aes), encoding='utf-8')  # 执行加密并转码返回bytes
-    return(encrypted_text)
+    return encrypted_text
  
  
 def AES_decrypt(secret_str,key):

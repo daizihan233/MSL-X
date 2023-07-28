@@ -6,11 +6,6 @@ block_cipher = None
 
 a = Analysis(
     ['main.py',
-    'ui\\settings.py',
-    'ui\\frpconfig.py',
-    'ui\\gen_passwd.py',
-    'ui\\login.py',
-    'ui\\logs.py',
     'ui\\nginxconf.py',
     'ui\\cryptlib\\AES.py',
     'ui\\cryptlib\\RSA.py',

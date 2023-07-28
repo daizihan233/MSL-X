@@ -1,5 +1,8 @@
 flet
 multitasking
 psutil
+pycryptodome
+pyhocon
+pyperclip
 requests
 retry

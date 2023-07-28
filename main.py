@@ -1,5 +1,6 @@
 import flet
 from flet import *
+
 import subprocess as sp
 import os
 import webbrowser as web
@@ -8,40 +9,48 @@ import math
 import random
 import requests
 import json
+import time
 
 from lib.create_settings import *
-import Custom
+from lib.nginxconfig import *
+
+import ui.logs as logs
+import ui.frpconfig as FrpConfig
+import ui.nginxconf as NgConfUI
+import ui.settings as Settings
+import ui.confcl as CreateConf
+from ui.Navbar import nav_side as navbar
+
+import PluginEntry
 
 def main(page:Page):
     
-    Custom.before_run()
+    PluginEntry.before_run("main",page)
     use_java = 'java'#保存Java路径，为'JAVA'时使用环境变量(默认)
     xms = 1#G省略
     xmx = 4
     server_path = ''
     server_file = 'server.jar'
     server_options = '-XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs'
-    srv_opti_read_only = 1
     vsmem = psutil.virtual_memory()
     xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
     hitokoto_html = requests.get(url="https://v1.hitokoto.cn/?c=i&encode=json&charset=utf-8")
     hitokoto = json.loads(hitokoto_html.text)
+
+    if not os.path.exists("Config"):
+        os.mkdir("Config")
+        with open('__init__.py','w') as f:
+            f.write()
     
-    '''
-    config_path = os.Path("./Config/")
-    if not config_path.exists():
-        os.mkdir(config_path)
-    '''
-    
-    Custom.after_run()
+    PluginEntry.after_run("main",page)
     
     def init_page():
         
         nonlocal hitokoto
         text = hitokoto["hitokoto"][:-1]
-        page.title = f"MSLX | {text} |"
-        page.window_height = 650
-        page.window_width = 1250
+        page.title = f"MSLX | 主页"
+        page.window_height = 600
+        page.window_width = 1350
         page.fonts = {
         "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
         "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
@@ -66,62 +75,11 @@ def main(page:Page):
             server_file = 'server.jar'
         if server_path:
             server = server_path + os.sep + server_file
-        print(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}")
         sp.run(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",check=True,shell=True,cwd=server_path)
         
     def create_controls():#设置控件
         
-        nonlocal nav_side_change
-        
-        #侧边栏
-        nav_side = NavigationRail(
-        selected_index=0,
-        #label_type=None,
-        #extended=True,
-        height=450,
-        min_width=60,
-        min_extended_width=400,
-        group_alignment=-0.9,
-        on_change=nav_side_change,
-        destinations=[
-            NavigationRailDestination(
-                icon=icons.HOME, 
-                label="主页"
-            ),
-            NavigationRailDestination(
-                icon=icons.HISTORY,
-                label="日志"
-            ),
-            NavigationRailDestination(
-                icon=icons.APPS, 
-                label="内网穿透"
-            ),
-            NavigationRailDestination(
-                icon=icons.DOCUMENT_SCANNER,
-                label="文档"
-            ),
-            NavigationRailDestination(
-                icon=icons.INFO,
-                label="信息"
-            ),
-            NavigationRailDestination(
-                icon=icons.SETTINGS,
-                label="设置"
-            ),
-            NavigationRailDestination(
-                icon=icons.INSERT_DRIVE_FILE,
-                label="配置文件"
-            ),
-            #NavigationRailDestination(
-            #    icon=icons.FILE_UPLOAD_OUTLINED,
-            #    label="加载配置文件"
-            #),
-            #NavigationRailDestination(
-            #    icon=icons.FILE_DOWNLOAD,
-            #    label="保存配置文件"
-            #),
-        ],)
-
+        navbar.on_change = change_navbar
         
         #开启服务器摁钮
         btn_start_server = ElevatedButton("开启服务器",width = 700,on_click=start_server)
@@ -169,7 +127,7 @@ def main(page:Page):
         btn_hitokoto = TextButton(hitokoto["hitokoto"],on_click=open_hitokoto)
         
         ui_main = Row(
-            controls = [nav_side,Column(    
+            controls = [navbar,Column(    
                 controls=[
                     Row(controls=
                         [switch_srv_opti_read_only,
@@ -279,45 +237,10 @@ def main(page:Page):
         page.update()
         picker.get_directory_path(dialog_title="选择服务端路径")
         
-    def nav_side_change(e):
-             
-        def open_log():
-            web.open(f"{server_path}/logs/latest.log")
-            
-        def about():
-            title = Markdown(
-            '''
-    # MSLX Beta 0.06 with Flet(Flutter)\n\
-    ## Made by MojaveHao with ❤️\n\
-    - Frp节点提供:终末、谎言
-    - 一言:
-            ''')
-            about = AlertDialog(
-            title=title, modal=True ,open=True)
-            page.add(about)
-            page.update()
-            sleep(3)
-            about.open = False
-            page.update()
-            
-        def msl_help():
-            web.open("https://mojavehao.github.io/MSL-X/#/")
-            
-        def open_frpc():
-            pass
-        
-        def open_settings():
-            pass
-        
-        def server_conf():
-            pass
-        
     def change_srv_opti_read_only(e):
 
-        nonlocal srv_opti_read_only
         
         def unlock_srv_opti(e):
-            nonlocal srv_opti_read_only
             
             def close(e):
                 nonlocal warn_change_srv_opti
@@ -326,8 +249,6 @@ def main(page:Page):
                 switch_srv_opti_read_only.label = "锁定"
                 txt_server_option.read_only = False
                 page.update()
-            
-            srv_opti_read_only = 0
             
             warn_finish_change = AlertDialog(
             modal = False,
@@ -341,10 +262,11 @@ def main(page:Page):
             page.add(warn_finish_change)
             page.update()
         
-        if srv_opti_read_only == 1:
+        if switch_srv_opti_read_only.value == 1:
 
             def close(e):
                 warn_change_srv_opti.open=False
+                switch_srv_opti_read_only.value = 0
                 switch_srv_opti_read_only.label = "锁定"
                 txt_server_option.read_only = True
                 page.update()
@@ -362,10 +284,11 @@ def main(page:Page):
             page.add(warn_change_srv_opti)
             page.update()
             
-        if srv_opti_read_only == 0:
-            srv_opti_read_only = 1
+        if switch_srv_opti_read_only.value == 0:
+            
             def close(e):
                 warn_finish_change.open=False
+                switch_srv_opti_read_only.value = 1
                 switch_srv_opti_read_only.label = "解锁"
                 txt_server_option.read_only = True
                 page.update()
@@ -409,7 +332,7 @@ def main(page:Page):
             page.update()
             
         def close(e):
-            warn_save_conf.open = False
+            bs_save_conf.open = False
             page.update()
         
         text_title = Text("配置文件设置")
@@ -431,7 +354,7 @@ def main(page:Page):
         )
         bs_save_conf = BottomSheet(
             content = column_save_opti,
-            open = True,
+            open = True
         )
         page.add(bs_save_conf)
         page.update()
@@ -492,9 +415,80 @@ def main(page:Page):
         uuid = hitokoto["uuid"]
         web.open(f"https://hitokoto.cn?uuid={uuid}")
         
+    def change_navbar(e):
+        
+        def clrpage():
+            page.controls.clear()
+            page.update()
+        
+        def mainpage():
+            clrpage()
+            init_page()
+            create_controls()
+            page.update()
+            
+        def logspage():
+            clrpage()
+            logs.init_page(page)
+            logs.create_controls(page)
+            page.update()
+            
+        def frpcpage():
+            clrpage()
+            FrpConfig.init_page(page)
+            FrpConfig.create_controls(page)
+            page.update()
+            
+        def opendoc():
+            web.open("https://mojavehao.github.io/MSL-X/#/")
+            
+        def showinfo():
+            def close(e):
+                about.open = False
+                page.update()
+            about = AlertDialog(title=Text("MSLX Beta 0.07"), modal=True ,open=True, actions=[TextButton("确认", on_click=close),],)
+            page.add(about)
+            page.update()
+        
+        def settingspage():
+            clrpage()
+            Settings.init_page(page)
+            Settings.create_controls(page)
+            page.update()
+            
+        def cconfigpage():
+            clrpage()
+            CreateConf.init_page(page)
+            btn_save_config = ElevatedButton("保存服务器配置",on_click=save_config)
+            btn_load_config = ElevatedButton("加载服务器配置",on_click=load_config)
+            page.add(Row(controls=[navbar,Column(controls=[btn_save_config,btn_load_config])]))
+            page.update()
+        
+        index = e.control.selected_index
+        
+        if index == 0:
+            mainpage()
+        
+        elif index == 1:
+            logspage()
+        
+        elif index == 2:
+            frpcpage()
+        
+        elif index == 3:
+            opendoc()
+        
+        elif index == 4:
+            showinfo()
+        
+        elif index == 5:
+            settingspage()
+        
+        else:
+            cconfigpage()
             
     init_page()
     create_controls()
     page.update()
     
-flet.app(target=main,assets_dir="assets",)
+flet.app(target=main,assets_dir="assets",port=61500)
