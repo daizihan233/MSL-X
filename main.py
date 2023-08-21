@@ -40,9 +40,7 @@ def main(page:Page):
     if not os.path.exists("Config"):
         os.mkdir("Config")
         with open('__init__.py','w') as f:
-            f.write()
-    
-    PluginEntry.after_run("main",page)
+            f.write()   
     
     def init_page():
         
@@ -490,5 +488,7 @@ def main(page:Page):
     init_page()
     create_controls()
     page.update()
+    
+    PluginEntry.after_run("main",page)
     
 flet.app(target=main,assets_dir="assets",port=61500)

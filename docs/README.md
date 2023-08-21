@@ -12,12 +12,12 @@
 ### Python
 
 - Linux(命令行安装，请准备好sudo/root权限)
-  现在请您先输入python --version查看现存Python版本，3.6以下都不可以运行
-- 如果您是Python2.x，请在终端输入sudo apt remove --auto-remove python2.x 来移除Python(把x换成后面的版本号)，然后按照Python3.x-Python3.7以下处理
+  现在请您先输入python --version查看现存Python版本，3.10以下都不可以运行
+- 如果您是Python2.x，请在终端输入sudo apt remove --auto-remove python2.x 来移除Python(把x换成后面的版本号)，然后按照Python3.x-Python3.10以下处理
 - 如果您是Python3.x：
 
-  - Python3.7以上可以直接跳到下载运行环境一节
-  - Python3.7以下可以查看[教程](https://cloud.tencent.com/developer/article/1565853)或自己折腾
+  - Python3.10以上可以直接跳到下载运行环境一节
+  - Python3.10以下可以查看[教程](https://cloud.tencent.com/developer/article/1565853)或自己折腾
   - Windows/macOS(官网直接下载安装包安装)
 
     - Windows前往[这里](https://www.python.org/downloads/windows/)
@@ -55,11 +55,10 @@
 
     再切换到一个非root用户来执行makepkg：
 
-      ```bash
-      su xxx(用户名)
-      makepkg -si
-      ```
-
+    ```bash
+    su xxx(用户名)
+    makepkg -si
+    ```
   - 使用
 
     - 它的语法和pacman一致。
@@ -97,11 +96,10 @@
 - [Java7下载](https://www.oracle.com/java/technologies/javase/javase7-archive-downloads.html)
 - [Deepin安装Java17示例](https://bbs.deepin.org/post/236160)
 - [命令行安装deb包教程](https://blog.csdn.net/oMcLin/article/details/108725325)
-- 
 
 #### Arch特编
 
-更新镜像源:
+希望不要滚挂:
 ``pacman -Syyu``
 
 ##### OpenJDK安装

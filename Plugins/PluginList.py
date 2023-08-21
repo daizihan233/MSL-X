@@ -1,24 +1,14 @@
 import sys
+import os
 sys.path.append("..") 
 from lib.log import log as log
 
 Pluginlist = []
 
-'''
-Plugin Info Example
-
-{
-    "name":"",
-    "author":"",
-    "description":"",
-    "version":"x.x.x"
-}
-
-'''
-
 log("PluginList已被调用")
 
-default_info = {
+default_info = \
+{
     "name":"AnonymousPlugin",
     "author":"Anonymous",
     "description":"",
@@ -26,7 +16,7 @@ default_info = {
 }
 
 class RegisterPlugin(object):
-    def __init__(self,process_location,load_time,plugin_info=default_info):
+    def __init__(self,plugin_info=default_info):
         log(f"修饰器被init了一次:{process_location},{load_time},{plugin_info}")
         self.process_location = process_location
         self.plugin_info = plugin_info
@@ -35,7 +25,13 @@ class RegisterPlugin(object):
     def __call__(self,func):
         log(f"修饰器被{func}Call了一次")
         global Pluginlist
-        TargetPlugin = {"Name":self.plugin_info["name"],"Location":self.process_location,"Information":self.plugin_info,"Loadtime":self.load_time.lower(),"EntryPoint":func}
+        TargetPlugin = \
+        {
+            "Name":self.plugin_info["name"],
+            "Location":self.plugin_info["location"][0],
+            "Loadtime":self.plugin_info["location"][1],
+            "EntryPoint":func,
+        }
         Pluginlist.append(TargetPlugin)
         name = TargetPlugin["Name"]
         location = TargetPlugin["Location"]
