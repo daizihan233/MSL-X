@@ -152,34 +152,6 @@ def main(page: Page):
                     ]
                     ), btn_hitokoto])])
         page.add(ui_main)
-
-        '''
-        #侧边摁钮
-        
-        btn_log = ElevatedButton("日志",on_click=open_log)
-        btn_frp = ElevatedButton("映射",on_click=open_frpc)
-        btn_about = ElevatedButton("关于",on_click=about)
-        btn_help = ElevatedButton("文档",on_click=msl_help)
-        btn_setting = ElevatedButton("设置")
-        column_ui_left = Column(controls=
-       [btn_log,
-        btn_frp,
-        btn_about,
-        btn_help,
-        btn_setting])
-        
-
-        #底部摁钮
-        btn_save_config = ElevatedButton("保存服务器配置",on_click=save_config)
-        btn_load_config = ElevatedButton("加载服务器配置",on_click=load_config)
-        row_bottom = Row(
-            controls=[
-                btn_save_config,
-                btn_load_config
-            ]
-        )
-        '''
-
         page.update()
 
     def change_java(e):
@@ -463,7 +435,7 @@ def main(page: Page):
             page.update()
 
         def settingspage():
-            clrpage()
+            clrpage() 
             Settings.init_page(page)
             Settings.create_controls(page)
             page.update()

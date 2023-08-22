@@ -11,16 +11,16 @@ port = 25565
 user = ''
 protocol = "tcp"
 remote_port = random.randint(20000,60000)
-page.fonts = {
-    "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
-    "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
-}
-page.theme = Theme(font_family="SHS_SC")
 
 def init_page(page):
     page.title = "MSLX | Frpc设置"
     page.window_width = 700
     page.window_height = 600
+    page.fonts = {
+    "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
+    "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
+    }
+    page.theme = Theme(font_family="SHS_SC")
     page.update()
     
 def create_controls(page):
@@ -91,13 +91,13 @@ def start_frpc(e):
     meta_token=20021120\n\
     protocol={protocol}\n\
 \
-    {user}TCP\n\
+    [TCP]\n\
     type=tcp\n\
     local_ip=127.0.0.1\n\
     local_port={port}\n\
     remote_port={remote_port}\n\
 \
-    {user}UDP\n\
+    [UDP]\n\
     type=udp\n\
     local_ip=127.0.0.1\n\
     local_port={port}\n\
