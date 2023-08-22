@@ -30,19 +30,16 @@ def create_controls(page):
 
     def start_frpc(e):
 
-        node_list = ["sh1", "hk", "bj", "gz", "sh2"]
-        if dd_node.value == "上海1":
-            node = node_list[0]
-        if dd_node.value == "香港":
-            node = node_list[1]
-        if dd_node.value == "北京[付费]":
-            node = node_list[2]
-        if dd_node.value == "广州[付费]":
-            node = node_list[3]
-        if dd_node.value == "上海2[付费]":
-            node = node_list[4]
-        else:
+        node_list = {
+            '上海1': 'sh1',
+            '香港': 'hk',
+            '北京[付费]': 'bj',
+            '广州[付费]': 'gz',
+            '上海2[付费]': 'sh2',
+        }
+        if dd_node.value is None:
             raise
+        node = node_list[dd_node.value]
 
         protocol_list = ["tcp", "udp", "tcp+udp", "kcp", "quic"]
 
@@ -88,10 +85,10 @@ def create_controls(page):
                 download_url = current_dict["url"]
                 download_name = current_dict["name"]
         
-        print(
-            f'''Donwload file name:{download_name}
-            Download file URL:{download_url}'''
-        )
+                print(
+                    f'''Donwload file name:{download_name}
+                    Download file URL:{download_url}'''
+                )
         # download(down_url=download_url, down_name=download_name)
 
     dd_node = Dropdown(
