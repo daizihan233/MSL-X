@@ -4,6 +4,7 @@ import Plugins.PluginList as PluginList
 import flet
 import gc
 import importlib
+from threading import Thread
 
 # 定义运行中保存的字典
 on_load_func_dict = {}
@@ -36,8 +37,11 @@ def after_run(name: str, page: flet.Page, **kwargs):
                 call_funcs = {}
                 call_vars = {}
                 use_thread_class = False
-                # target_func
-                # target_thread_class
+                target_func: Callable = index["EntryPoint"]
+                target_thread_class: Thread
+                need_funcs: List = []
+                need_vars: List = []
+                need_page = False
 
                 # 此处开始处理插件注册的信息
                 # 处理插件需要获取的程序变量和函数
@@ -52,11 +56,16 @@ def after_run(name: str, page: flet.Page, **kwargs):
                         for func_name in need_funcs:
                             if func_name in kwargs["funcs"]:
                                 call_funcs[func_name] = func_name
+                else:
+                    log("没有检测到args键,已跳过处理")
 
                 for key in index.keys():
                     match key:
                         case "unsafe":  # unsafe关键字检测，目前还没有正式实现相关功能
                             unsafe = index["unsafe"]
+                            
+                        case "need_page":  # unsafe关键字检测，目前还没有正式实现相关功能
+                            need_page = index["need_page"]
 
                         case "muti_thread":  # 检测是否使用多线程
                             if "thread_class" in index.keys() and index["thread_class"] != None:
@@ -89,6 +98,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                 global on_load_func_dict
                                                 on_load_func_dict["Plugins." + file_Name] = on_load_func
                                                 target_func = on_load_func
+                                                log("要执行的目标函数已替换为on_load中指定的函数")
 
                                         elif isinstance(dict_events[key], dict):  # 是字典
                                             target_dict = dict_events[key]
@@ -142,12 +152,53 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                         if target_disable_class != None:
                                                             global on_disable_classes_dict
                                                             on_disable_classes_dict["Plugins."+file_Name] = target_dict["value"]
-
-                            gc.collect()
+                                gc.collect()
+                                
+                        case _:
+                            log("没有检测到unsafe,muti_thread或者events键,已跳过处理")
+                            
 
                 # 处理完成,准备调用
                 if use_thread_class == False:
-                    target_func(need_funcs=need_funcs, need_vars=need_vars)
+                    log("没有使用thread类,将直接调用函数")
+                    if bool(need_funcs) == False:
+                        if bool(need_vars) == False:
+                            if need_page == False:
+                                target_func()
+                            else:
+                                target_func(page)
+                        else:
+                            if need_page == False:
+                                target_func(need_vars=need_vars)
+                            else:
+                                target_func(page,need_vars=need_vars)
+                    else:
+                        if need_page == False:
+                            target_func(page,need_funcs=need_funcs,need_vars=need_vars)
+                        else:
+                            target_func(page,need_funcs=need_funcs,need_vars=need_vars)
                 else:
                     target_thread_class.run(
                         target=target_func, need_vars=need_vars, need_funcs=need_funcs)
+                    if bool(need_funcs) == False:
+                        if bool(need_vars) == False:
+                            if need_page == False:
+                                target_thread_class.run(
+                            target=target_func)
+                            else:
+                                target_thread_class.run(
+                            target=target_func,page=page)
+                        else:
+                            if need_page == False:
+                                target_thread_class.run(
+                            target=target_func, need_vars=need_vars)
+                            else:
+                                target_thread_class.run(
+                            target=target_func, need_vars=need_vars,page=page)
+                    else:
+                        if need_page == False:
+                            target_thread_class.run(
+                            target=target_func, need_vars=need_vars, need_funcs=need_funcs)
+                        else:
+                            target_thread_class.run(
+                            target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)

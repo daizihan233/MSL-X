@@ -115,7 +115,7 @@ def main(page: Page):
         btn_select_server_path = ElevatedButton(
             "选取服务端路径", on_click=select_server_path)
         txt_server_name = TextField(
-            label="服务端名称(不需要.jar后缀),默认为server", width=300, height=50)
+            label="服务端名称(不需要.jar后缀),默认为server", width=300)
 
         global sli_xms
         global sli_xmx
@@ -479,26 +479,21 @@ def main(page: Page):
 
         index = e.control.selected_index
 
-        if index == 0:
-            mainpage()
-
-        elif index == 1:
-            logspage()
-
-        elif index == 2:
-            frpcpage()
-
-        elif index == 3:
-            opendoc()
-
-        elif index == 4:
-            showinfo()
-
-        elif index == 5:
-            settingspage()
-
-        else:
-            cconfigpage()
+        match index:
+            case 0:
+                mainpage()
+            case 1:
+                logspage()
+            case 2:
+                frpcpage()
+            case 3:
+                opendoc()
+            case 4:
+                showinfo()
+            case 5:
+                settingspage() 
+            case 6:
+                cconfigpage()               
 
     init_page()
     create_controls()

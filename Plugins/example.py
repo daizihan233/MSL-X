@@ -1,22 +1,17 @@
 import os
 
-from .PluginList import RegisterPlugin
+from .PluginList import AddPluginInfo,PluginInfo
 
-info = {
-    "name": "ExamplePlugin",
-    "author": "MojaveHao",
-    "description": "Nope,Happy coding! :)",
-    "version": "1.0.0",
-    "location": ("main", "after"),
-    "file": os.path.basename(__file__),
-}
+info = PluginInfo(
+    name="ExamplePlugin",
+    author= "MojaveHao",
+    description= "Nope,Happy coding! =)",
+    version= "1.0.0",
+    location= ("main", "after"),
+    file= os.path.basename(__file__),
+    need_page= False
+)
 
-
-# @RegisterPlugin(info)
-# def foo(page):
-#     print("Example Plugin Loaded!(Before)")
-
-
-@RegisterPlugin(info)
-def foo2(page):
+@AddPluginInfo(info)
+def foo2():
     print("Example Plugin Loaded!(After)")

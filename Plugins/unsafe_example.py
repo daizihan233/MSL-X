@@ -6,6 +6,7 @@ info = {
     "author": "MojaveHao",
     "description": "Nope,Happy coding! :)",
     "version": "1.0.0",
+    "need_page":False,
     "args":
     {
         "need_funcs": [],
