@@ -19,9 +19,10 @@ def init_page(page):
     page.window_width = 700
     page.window_height = 600
     page.fonts = {
-        "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
-        "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
+    "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
+    "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
     }
+    page.theme = Theme(font_family="SHS_SC")
     page.update()
 
 
@@ -53,13 +54,13 @@ def create_controls(page):
         meta_token=20021120
         protocol={protocol}
 
-        {user}TCP
+        [TCP]
         type=tcp
         local_ip=127.0.0.1
         local_port={port}
         remote_port={remote_port}
 
-        {user}UDP
+        [UDP]
         type=udp
         local_ip=127.0.0.1
         local_port={port}
