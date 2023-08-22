@@ -1,6 +1,8 @@
 import sys,os
 sys.path.append("..") 
 from lib.log import log
+import typing.Optional
+import threading.Thread
 
 Pluginlist = []
 
@@ -14,8 +16,8 @@ default_info = {
     "need_page": False
 }
 
-class PluginInfo(object):
-    def __init__(self, name="AnonymosPlugin", author="Anonymous", description="", version="1.0.0", need_page=False,args={}, unsafe=False, muti_thread=False, thread_class=None, location=("main","after"), file=os.path.basename(__file__),events={} ):
+class PluginInfo(object): # 新版本的插件信息类
+    def __init__(self, name:str="AnonymosPlugin", author:str="Anonymous", description:str="", version:str="1.0.0", need_page:bool=False,args:dict={}, unsafe:bool=False, muti_thread:bool=False, thread_class:Optional[Thread]=None, location:tuple=("main","after"), file:str=os.path.basename(__file__),events:dict={} ):
         self.name = name
         self.author = author
         self.description = description
@@ -46,7 +48,7 @@ class PluginInfo(object):
 
 default_info_class = PluginInfo()
 
-class AddPluginInfo(object):
+class AddPluginInfo(object): # 接受插件信息类的新版修饰器
     def __init__(self, plugin_info: PluginInfo = default_info_class):
         process_location = plugin_info.location[0]
         load_time = plugin_info.location[1]
@@ -74,9 +76,7 @@ class AddPluginInfo(object):
         time = TargetPlugin["Loadtime"]
         log(f"已注册插件{name},位置为{location}[{time}]")
 
-
-
-class RegisterPlugin(object):
+class RegisterPlugin(object): # 接受字典的老版本修饰器
     def __init__(self, plugin_info: dict = default_info):
         process_location = plugin_info["location"][0]
         load_time = plugin_info["location"][1]
