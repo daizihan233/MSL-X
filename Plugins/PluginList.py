@@ -1,8 +1,8 @@
 import sys,os
 sys.path.append("..") 
 from lib.log import log
-import typing.Optional
-import threading.Thread
+from typing import Optional
+from threading import Thread
 
 Pluginlist = []
 
