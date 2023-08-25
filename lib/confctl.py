@@ -14,9 +14,9 @@ class ConfCtl():
         self.description = ""
         self.name = "Default"
     
-    def Load_Config():
-        with oepn(self.path,'r','utf-8') as fl:
-            conf_dict = json.loads(fl)
+    def Load_Config(self):
+        with open(self.path,'r', encoding='utf-8') as fl:
+            conf_dict = json.load(fl)
             self.xms = conf_dict["xms"]
             self.xmx = conf_dict["xmx"]
             self.java = conf_dict["java"]
@@ -26,8 +26,8 @@ class ConfCtl():
             self.jvm_options = conf_dict["jvm_options"]
             self.name = conf_dict["name"]
             
-    def Save_Config():
-        with open(self.path,'w','utf-8') as fl:
+    def Save_Config(self):
+        with open(self.path,'w', encoding='utf-8') as fl:
             conf_dict = \
                 {
                     "xms":self.xms,

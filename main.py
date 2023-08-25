@@ -47,7 +47,7 @@ def main(page: Page):
 
     def init_page():
 
-        nonlocal hitokoto,name,server_file,server_options,server_path,xms,xmx
+        nonlocal hitokoto,name,server_file,server_options,server_path,xms,xmx,use_java
         text = hitokoto["hitokoto"][:-1]
         page.title = f"MSLX | 主页"
         page.window_height = 600
