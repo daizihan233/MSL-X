@@ -1,1 +1,7 @@
-{"name": "Default", "server": "server.jar", "path": "", "java": "java", "describe": ""}
+{
+"name": "Default", 
+"server": "server.jar", 
+"path": "", 
+"java": "java",
+"description": ""
+}

@@ -7,7 +7,6 @@ def add_to_32(value):
             value += b'\x00'
     return value     # 返回bytes
  
- 
 # str转换为bytes超过32位时处理
 def cut_value(org_str):
     org_bytes = str.encode(org_str)

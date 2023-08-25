@@ -1,16 +1,18 @@
 from flet import *
 
-import subprocess as sp
 import os
-import webbrowser as web
 import psutil
 import math
 import requests
 import json
 import time
+import subprocess as sp
+import webbrowser as web
+
 
 from lib.create_settings import *
 from lib.nginxconfig import *
+from lib.confctl import ConfCtl
 
 import ui.logs as logs
 import ui.frpconfig as FrpConfig
@@ -32,6 +34,7 @@ def main(page: Page):
     server_options = '-XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs'
     vsmem = psutil.virtual_memory()
     xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
+    name = "Default"
     hitokoto_html = requests.get(
         url="https://v1.hitokoto.cn/?c=i&encode=json&charset=utf-8")
     hitokoto = json.loads(hitokoto_html.text)
@@ -44,7 +47,7 @@ def main(page: Page):
 
     def init_page():
 
-        nonlocal hitokoto
+        nonlocal hitokoto,name,server_file,server_options,server_path,xms,xmx
         text = hitokoto["hitokoto"][:-1]
         page.title = f"MSLX | 主页"
         page.window_height = 600
@@ -54,6 +57,31 @@ def main(page: Page):
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
         page.theme = Theme(font_family="SHS_SC")
+        
+        if os.path.exists("Config/Default.json"): # 加载默认配置
+            with open("Config/Default.json") as f:
+                conf = ConfCtl("Default")
+                conf.Load_Config()
+                server_path = conf.server_path
+                server_file = conf.server
+                use_java = conf.java                
+                xms = conf.xms
+                xmx = conf.xmx
+                name = conf.name
+                for option in conf.jvm_options:
+                    server_options += f"{option} "
+                page.title += f" | {name}"
+                    
+        else: # 如果默认配置不存在就保存默认配置
+            conf = ConfCtl()
+            conf.server_path = server_path
+            conf.server = server_file
+            conf.java = use_java
+            conf.xms = xms
+            conf.xmx = xmx
+            conf.name = "Default"
+            conf.jvm_options = server_options.split(' ')
+            conf.Save_Config()
 
     def start_server(e):
         if xms > xmx:
@@ -302,94 +330,101 @@ def main(page: Page):
         page.update()
 
     def save_config(e):
-        nonlocal server_file, server_path, use_java
-
-        def save_conf(e):
-            nonlocal server_file, server_path, use_java, txt_config_name, txt_config_describe
-
-            name = txt_config_name.value
-            describe = txt_config_describe.value
-            create_conf(name, server_file, server_path, use_java, describe)
-            page.update()
-
-        def close(e):
-            bs_save_conf.open = False
-            page.update()
-
-        text_title = Text("配置文件设置")
-        txt_config_name = TextField(label="配置名称(不要含有中文和特殊符号)", value="Default")
-        txt_config_describe = TextField(label="配置注释")
-        column_save_opti = Column(
-            controls=[
-                text_title,
-                txt_config_name,
-                txt_config_describe,
-                Row(
-                    controls=[
-                        TextButton("确认保存", on_click=save_conf),
-                        TextButton("取消", on_click=close)
-                    ]
-                )
-
-            ]
-        )
-        bs_save_conf = BottomSheet(
-            content=column_save_opti,
-            open=True
-        )
-        page.add(bs_save_conf)
+        nonlocal server_path, server_file, use_java, xms, xmx
+        txt_conf_name = TextField(
+            label="配置文件名称"
+            )
+        
+        if txt_conf_name != "":
+            conf = ConfCtl()
+            conf.server_path = server_path
+            conf.server = server_file
+            conf.java = use_java
+            conf.xms = xms
+            conf.xmx = xmx
+            conf.name = name
+            conf.jvm_options = server_options.split(' ')
+            conf.Save_Config()
+            def close(e):
+                warn_conf.open = False
+                page.update()
+            warn_conf = AlertDialog(
+                modal=False,
+                title=Text("保存配置文件成功"),
+                actions=[
+                    TextButton("确认", on_click=close),
+                ],
+                open=True
+            )
+            page.add(warn_conf)
+            
+        else:
+            def close(e):
+                warn_conf.open = False
+                page.update()
+            warn_conf = AlertDialog(
+                modal=False,
+                title=Text("请输入配置文件名称"),
+                actions=[
+                    TextButton("确认", on_click=close),
+                ],
+                open=True
+            )
+            page.add(warn_conf)
+            
         page.update()
 
     def load_config(e):
         global name
-        nonlocal server_path, server_file, use_java
-        dict_tmp_conf = {}
+        nonlocal server_path, server_file, use_java, xms, xmx
+        def get_result(e: FilePickerResultEvent):
+            file_result = e.path
+            if file_result:
+                file_result_array = file_result.split('/') # 切割路径,最后一项为文件名
+                file_name_array = file_result_array[-1].split('.') # 切割后缀
+                conf = ConfCtl(file_name_array[0]) # 传入文件名
+                conf.Load_Config()
+                
+                server_path = conf.server_path
+                server_file = conf.server
+                use_java = conf.java                
+                xms = conf.xms
+                xmx = conf.xmx
+                name = conf.name
+                for option in conf.jvm_options:
+                    server_options += f"{option} "
+                    
+                def close(e):
+                    warn_conf.open = False
+                    page.update()
+                warn_conf = AlertDialog(
+                    modal=False,
+                    title=Text("加载配置文件成功"),
+                    actions=[
+                        TextButton("确认", on_click=close),
+                    ],
+                    open=True
+                )
+                page.add(warn_conf)
+                
+            else:
+                def close(e):
+                    warn_conf.open = False
+                    page.update()
+                warn_conf = AlertDialog(
+                    modal=False,
+                    title=Text("加载配置文件失败"),
+                    actions=[
+                        TextButton("确认", on_click=close),
+                    ],
+                    open=True
+                )
+                page.add(warn_conf)
 
-        def load_conf(e):
-
-            def close(e):
-                bs_load_conf_view.open = False
-
-            def load(e):
-                nonlocal server_path, server_file, use_java, dict_tmp_conf
-                server_file = dict_tmp_conf["server"]
-                server_path = dict_tmp_conf["path"]
-                use_java = dict_tmp_conf["java"]
-
-            nonlocal dict_tmp_conf, bs_load_conf_name
-            dict_tmp_conf = conf_load(name)
-            bs_load_conf_name.open = False
-            text_info = Text(f"配置文件{name}.json信息:{dict_tmp_conf}")
-            btn_load = TextButton("确认加载", on_click=load)
-            btn_cannel = TextButton("取消", on_click=close)
-            col_info = Column(
-                controls=[
-                    text_info,
-                    btn_load,
-                    btn_cannel
-                ]
-            )
-            bs_load_conf_view = BottomSheet(
-                content=text_info
-            )
-            page.add(bs_load_conf_view)
-            page.update()
-
-        txt_load_name = TextField(label="配置文件名称", value="Default")
-        name = txt_load_name.value
-
-        btn_load = TextButton("加载", on_click=load_conf)
-        col_load_opti = Column(
-            controls=[
-                txt_load_name,
-                btn_load
-            ]
-        )
-        bs_load_conf_name = BottomSheet(
-            content=col_load_opti,
-            open=True
-        )
-        page.add(bs_load_conf_name)
+        picker = FilePicker(on_result=get_result)
+        page.overlay.append(picker)
+        page.update()
+        picker.get_directory_path(dialog_title="选择服务端路径")
         page.update()
 
     def open_hitokoto(e):
@@ -472,6 +507,5 @@ def main(page: Page):
     page.update()
 
     PluginEntry.after_run("main", page)
-
 
 app(target=main, assets_dir="assets", port=61500)

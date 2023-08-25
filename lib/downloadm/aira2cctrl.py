@@ -12,7 +12,7 @@ class aira2cc():
         self.aira_path = aira_path
         self.aira_name = aira_name
         self.aira_cmdoptions = aira_cmdoptions
-        included_options = [
+        self.included_options = [
             f"--log={enable_log_file}",
             f"--max-concurrent-downloads={max_concurrent_downloads}",
             f"--split={split}",
@@ -40,7 +40,7 @@ class aira2cc():
         }
         '''
         if enable_http_proxy != False:
-            if type(enable_http_proxy) == "dict":
+            if isinstance(enable_http_proxy,dict):
                 user = enable_http_proxy["user"]
                 passwd = enable_http_proxy["passwd"]
                 host = enable_http_proxy["host"]
@@ -48,13 +48,13 @@ class aira2cc():
                 proxy = f"--http-proxy={user}:{passwd}@{host}:{port}"
                 included_options.append(proxy)
             else:
-                raise ConfigDictTypeError("Enable_http_proxy")
+                raise self.ConfigDictTypeError("Enable_http_proxy")
             
         if enable_check != False:
             if type(enable_check) == "dict":
                 pass
             else:
-                raise ConfigDictTypeError("Enable_sumcheck")
+                raise self.ConfigDictTypeError("Enable_sumcheck")
     
     def start(self,download_name,download_path,download_url,download_opti=[''],dry_run=False):
         if download_opti == '':
