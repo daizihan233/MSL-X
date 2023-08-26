@@ -1,10 +1,12 @@
-from lib.log import log as log
 from Plugins import *
 import Plugins.PluginList as PluginList
 import flet
 import gc
 import importlib
 from threading import Thread
+from loguru import logger
+
+logger.add('Logs/{time:YYYY-MM-DD}-PluginEntry.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
 # 定义运行中保存的字典
 on_load_func_dict = {}
@@ -15,11 +17,11 @@ on_enable_classes_dict = {}
 on_disable_classes_dict = {}
 
 def before_run(name: str, page: flet.Page):
-    log(f"在{name}初始化之前调用总入口点")
-    log(f"当前Plugin List:{PluginList.Pluginlist}")
+    logger.debug(f"在{name}初始化之前调用总入口点")
+    logger.debug(f"当前Plugin List:{PluginList.Pluginlist}")
     for index in PluginList.Pluginlist:
         if index["Loadtime"] == 'before':
-            log(f"已找到注册的插件,信息为{index}")
+            logger.debug(f"已找到注册的插件,信息为{index}")
             if index["Location"] == name:
                 # 创建变量方便后期调用
                 call_funcs = {}
@@ -45,7 +47,7 @@ def before_run(name: str, page: flet.Page):
                             if func_name in kwargs["funcs"]:
                                 call_funcs[func_name] = func_name
                 else:
-                    log("没有检测到args键,已跳过处理")
+                    logger.debug("没有检测到args键,已跳过处理")
 
                 for key in index.keys():
                     match key:
@@ -62,7 +64,7 @@ def before_run(name: str, page: flet.Page):
                                                 global on_load_func_dict
                                                 on_load_func_dict["Plugins." + file_Name] = on_load_func
                                                 target_func = on_load_func
-                                                log("要执行的目标函数已替换为on_load中指定的函数")
+                                                logger.info("要执行的目标函数已替换为on_load中指定的函数")
 
                                         elif isinstance(dict_events[key], dict):  # 是字典
                                             target_dict = dict_events[key]
@@ -80,7 +82,7 @@ def before_run(name: str, page: flet.Page):
 
                 # 处理完成,准备调用
                 if use_thread_class == False:
-                    log("[Before]没有使用thread类,将直接调用函数")
+                    logger.debug("[Before]没有使用thread类,将直接调用函数")
                     if bool(need_funcs) == False:
                         if bool(need_vars) == False:
                             if need_page == False:
@@ -93,7 +95,7 @@ def before_run(name: str, page: flet.Page):
                             else:
                                 target_func(page,need_vars=need_vars)
                     else:
-                        log("[Before]检测到使用了thread类")
+                        logger.debug("[Before]检测到使用了thread类")
                         if need_page == False:
                             target_func(page,need_funcs=need_funcs,need_vars=need_vars)
                         else:
@@ -125,10 +127,10 @@ def before_run(name: str, page: flet.Page):
                             target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
 
 def after_run(name: str, page: flet.Page, **kwargs):
-    log(f"在{name}初始化之后调用总入口点")
+    logger.debug(f"在{name}初始化之后调用总入口点")
     for index in PluginList.Pluginlist:
         if index["Loadtime"] == 'after':
-            log(f"已找到注册的插件,信息为{index}")
+            logger.debug(f"已找到注册的插件,信息为{index}")
             file_Name = index["file"]
             if index["Location"] == name:
 
@@ -156,7 +158,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                             if func_name in kwargs["funcs"]:
                                 call_funcs[func_name] = func_name
                 else:
-                    log("没有检测到args键,已跳过处理")
+                    logger.debug("没有检测到args键,已跳过处理")
 
                 for key in index.keys():
                     match key:
@@ -179,9 +181,9 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                         target_thread_class = thread_class
                                         use_thread_class = True
                                     else:
-                                        log("指定的对象没有run方法", 2)
+                                        logger.critical("指定的对象没有run方法", 2)
                             else:
-                                log("指定的对象不存在", 2)
+                                logger.critical("指定的对象不存在", 2)
                             gc.collect()
 
                         case "events":  # 添加事件处理
@@ -197,7 +199,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                 global on_load_func_dict
                                                 on_load_func_dict["Plugins." + file_Name] = on_load_func
                                                 target_func = on_load_func
-                                                log("要执行的目标函数已替换为on_load中指定的函数")
+                                                logger.info("要执行的目标函数已替换为on_load中指定的函数")
 
                                         elif isinstance(dict_events[key], dict):  # 是字典
                                             target_dict = dict_events[key]
@@ -255,7 +257,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
 
                 # 处理完成,准备调用
                 if use_thread_class == False:
-                    log("没有使用thread类,将直接调用函数")
+                    logger.debug("没有使用thread类,将直接调用函数")
                     if bool(need_funcs) == False:
                         if bool(need_vars) == False:
                             if need_page == False:
@@ -273,7 +275,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                         else:
                             target_func(page,need_funcs=need_funcs,need_vars=need_vars)
                 else:
-                    log("[After]检测到使用了thread类")
+                    logger.debug("[After]检测到使用了thread类")
                     if bool(need_funcs) == False:
                         if bool(need_vars) == False:
                             if need_page == False:

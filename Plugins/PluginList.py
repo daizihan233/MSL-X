@@ -1,12 +1,11 @@
 import sys,os
 sys.path.append("..") 
-from lib.log import log
 from typing import Optional
 from threading import Thread
+from loguru import logger
+logger.add('Logs/{time:YYYY-MM-DD}-PluginList.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
 Pluginlist = []
-
-log("PluginList已被调用")
 
 default_info = {
     "name": "AnonymousPlugin",
@@ -52,13 +51,13 @@ class AddPluginInfo(object): # 接受插件信息类的新版修饰器
     def __init__(self, plugin_info: PluginInfo = default_info_class):
         process_location = plugin_info.location[0]
         load_time = plugin_info.location[1]
-        log(f"装饰器被init了一次:{process_location},{load_time},{plugin_info.name}")
+        logger.debug(f"装饰器被init了一次:{process_location},{load_time},{plugin_info.name}")
         self.process_location = process_location
         self.plugin_info = plugin_info
         self.load_time = load_time
 
     def __call__(self, func):
-        log(f"装饰器被{func}Call了一次")
+        logger.debug(f"装饰器被{func}Call了一次")
         global Pluginlist
         TargetPlugin = {
             "Name": self.plugin_info.name,
@@ -74,19 +73,19 @@ class AddPluginInfo(object): # 接受插件信息类的新版修饰器
         name = TargetPlugin["Name"]
         location = TargetPlugin["Location"]
         time = TargetPlugin["Loadtime"]
-        log(f"已注册插件{name},位置为{location}[{time}]")
+        logger.info(f"已注册插件{name},位置为{location}[{time}]")
 
 class RegisterPlugin(object): # 接受字典的老版本修饰器
     def __init__(self, plugin_info: dict = default_info):
         process_location = plugin_info["location"][0]
         load_time = plugin_info["location"][1]
-        log(f"装饰器被init了一次:{process_location},{load_time},{plugin_info}")
+        logger.debug(f"装饰器被init了一次:{process_location},{load_time},{plugin_info}")
         self.process_location = process_location
         self.plugin_info = plugin_info
         self.load_time = load_time
 
     def __call__(self, func):
-        log(f"装饰器被{func}Call了一次")
+        logger.debug(f"装饰器被{func}Call了一次")
         global Pluginlist
         TargetPlugin = {
             "Name": self.plugin_info["name"],
@@ -102,4 +101,4 @@ class RegisterPlugin(object): # 接受字典的老版本修饰器
         name = TargetPlugin["Name"]
         location = TargetPlugin["Location"]
         time = TargetPlugin["Loadtime"]
-        log(f"已注册插件{name},位置为{location}[{time}]")
+        logger.info(f"已注册插件{name},位置为{location}[{time}]")

@@ -1,8 +1,9 @@
 flet
+loguru
 multitasking
 psutil
 pycryptodome
 pyhocon
 pyperclip
-requests
+Requests
 retry

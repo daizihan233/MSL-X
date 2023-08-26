@@ -1,7 +1,1 @@
-{
-"name": "Default", 
-"server": "server.jar", 
-"path": "", 
-"java": "java",
-"description": ""
-}
+{"xms": 1, "xmx": 4, "java": "java", "server": "server", "path": "", "description": "", "jvm_options": [], "name": "Default"}

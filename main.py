@@ -8,6 +8,7 @@ import json
 import time
 import subprocess as sp
 import webbrowser as web
+from loguru import logger
 
 
 from lib.create_settings import *
@@ -22,7 +23,7 @@ from ui.Navbar import nav_side as navbar
 
 import PluginEntry
 
-
+@logger.catch
 def main(page: Page):
 
     PluginEntry.before_run("main", page)
@@ -41,9 +42,12 @@ def main(page: Page):
 
     if not os.path.exists("Config"):
         os.mkdir("Config")
+    if not os.path.exists("Logs"):
+        os.mkdir("Logs")
     if not os.path.exists("Config/__init__.py"):
         with open('__init__.py', 'w') as f:
             f.write('')
+    logger.add('Logs/{time:YYYY-MM-DD}.log', format='[ {time:HH:mm:ss} ][ {level} ] {message} ', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
     def init_page():
 
@@ -505,7 +509,9 @@ def main(page: Page):
     init_page()
     create_controls()
     page.update()
+    logger.debug("页面完成初始化")
 
     PluginEntry.after_run("main", page)
+    logger.debug("总入口点已调用")
 
 app(target=main, assets_dir="assets", port=61500)
