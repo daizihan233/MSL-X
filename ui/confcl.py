@@ -1,4 +1,3 @@
-import flet
 from flet import *
 from .Navbar import nav_side as navbar
 
@@ -14,7 +13,7 @@ def init_page(page):
     page.update()
     
 def create_controls(page):
-    btn_save_config = ElevatedButton("保存服务器配置",on_click=save_config)
-    btn_load_config = ElevatedButton("加载服务器配置",on_click=load_config)
+    btn_save_config = ElevatedButton("保存服务器配置")
+    btn_load_config = ElevatedButton("加载服务器配置")
     page.add(Row(controls=[navbar,Column(controls=[btn_save_config,btn_load_config])]))
     

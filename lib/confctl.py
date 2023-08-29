@@ -1,10 +1,11 @@
 import json
 from loguru import logger
+from typing import Optional
 logger.add('Logs/{time:YYYY-MM-DD}-ConfCtl.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
 class ConfCtl():
     
-    def __init__(self,name="Default"):
+    def __init__(self,name:str="Default"):
         self.name = name
         self.path = f'Config/{name}.json'
         self.xms = 1
@@ -36,7 +37,7 @@ class ConfCtl():
     @logger.catch        
     def Save_Config(self):
         with open(self.path,'w', encoding='utf-8') as fl:
-            conf_dict = \
+            conf_dict:Optional[dict[str,str | list[str]]] = \
                 {
                     "xms":self.xms,
                     "xmx":self.xmx,
@@ -47,4 +48,4 @@ class ConfCtl():
                     "jvm_options":self.jvm_options,
                     "name":self.name                                    
                 }
-            conf_json = json.dump(conf_dict,fl)
+            json.dump(conf_dict,fl)

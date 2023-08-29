@@ -1,5 +1,4 @@
-import flet
-from flet import *
+from flet import Page,dropdown,TextField,Theme,Dropdown,ElevatedButton,Row,AlertDialog,TextButton
 import pyperclip as clip
 
 import sys,os
@@ -7,7 +6,7 @@ sys.path.append(os.getcwd())
 from lib.crypt import AES_encrypt,AES_decrypt
 from lib.crypt import RSA_encrypt,RSA_decrypt
     
-def init_page(Page):
+def init_page(page:Page):
     page.title = "MSLX | Panel Password Genrate"
     page.window_height = 550
     page.window_width = 900

@@ -10,8 +10,6 @@ import subprocess as sp
 import webbrowser as web
 from loguru import logger
 
-
-from lib.create_settings import *
 from lib.nginxconfig import *
 from lib.confctl import ConfCtl
 
@@ -261,6 +259,7 @@ def main(page: Page):
                 txt_server_option.read_only = False
                 page.update()
 
+            warn_change_srv_opti.open = False
             warn_finish_change = AlertDialog(
                 modal=False,
                 title=Text("更改服务端启动选项"),
@@ -300,7 +299,7 @@ def main(page: Page):
 
             def close(e):
                 warn_finish_change.open = False
-                switch_srv_opti_read_only.value = True
+                switch_srv_opti_read_only.value = False
                 switch_srv_opti_read_only.label = "解锁"
                 txt_server_option.read_only = True
                 page.update()
