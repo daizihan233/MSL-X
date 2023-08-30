@@ -1,3 +1,4 @@
+from typing import Callable
 from Plugins import *
 import Plugins.PluginList as PluginList
 import flet
@@ -16,7 +17,7 @@ on_load_classes_dict = {}
 on_enable_classes_dict = {}
 on_disable_classes_dict = {}
 
-def before_run(name: str, page: flet.Page):
+def before_run(name: str, page: flet.Page, **kwargs):
     logger.debug(f"在{name}初始化之前调用总入口点")
     logger.debug(f"当前Plugin List:{PluginList.Pluginlist}")
     for index in PluginList.Pluginlist:
@@ -29,8 +30,8 @@ def before_run(name: str, page: flet.Page):
                 use_thread_class = False
                 target_func: Callable = index["EntryPoint"]
                 target_thread_class: Thread
-                need_funcs: List = []
-                need_vars: List = []
+                need_funcs: list = []
+                need_vars: list = []
                 need_page = False
 
                 # 此处开始处理插件注册的信息
@@ -140,8 +141,8 @@ def after_run(name: str, page: flet.Page, **kwargs):
                 use_thread_class = False
                 target_func: Callable = index["EntryPoint"]
                 target_thread_class: Thread
-                need_funcs: List = []
-                need_vars: List = []
+                need_funcs: list = []
+                need_vars: list = []
                 need_page = False
 
                 # 此处开始处理插件注册的信息
