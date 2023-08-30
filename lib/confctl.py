@@ -1,6 +1,7 @@
 import json
 from loguru import logger
-from typing import Optional
+from typing import Any
+from .info_classes import SingleServerInfo
 logger.add('Logs/{time:YYYY-MM-DD}-ConfCtl.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
 class ConfCtl():
@@ -37,7 +38,7 @@ class ConfCtl():
     @logger.catch        
     def Save_Config(self):
         with open(self.path,'w', encoding='utf-8') as fl:
-            conf_dict:Optional[dict[str,str | list[str]]] = \
+            conf_dict:Any = \
                 {
                     "xms":self.xms,
                     "xmx":self.xmx,
@@ -49,3 +50,31 @@ class ConfCtl():
                     "name":self.name                                    
                 }
             json.dump(conf_dict,fl)
+            
+def LoadServerInfoToServer(name:str="Default"):
+    cfctl = ConfCtl(name)
+    cfctl.Load_Config()
+    server = SingleServerInfo\
+    (
+        xms = cfctl.xms,
+        xmx = cfctl.xmx,
+        use_java = cfctl.java,
+        server_options = cfctl.jvm_options,
+        server_file = cfctl.server,
+        server_path = cfctl.server_path,
+        descr = cfctl.description,
+        name = cfctl.name
+    )
+    return server
+
+def SaveServerInfoToConf(serverclass:Any,name:str="Default"): # type: ignore
+    cfctl = ConfCtl(name)
+    cfctl.xms = serverclass.xms
+    cfctl.xmx = serverclass.xmx
+    cfctl.java = serverclass.use_java
+    cfctl.jvm_options = serverclass.server_options
+    cfctl.server = serverclass.server_file
+    cfctl.server_path = serverclass.server_path
+    cfctl.description = serverclass.descr
+    cfctl.name = serverclass.name
+    cfctl.Save_Config()

@@ -2,7 +2,8 @@ import os
 
 from .PluginList import AddPluginInfo,PluginInfo
 
-info = PluginInfo(
+info = PluginInfo\
+(
     name="ExamplePlugin",
     author= "MojaveHao",
     description= "Nope,Happy coding! =)",

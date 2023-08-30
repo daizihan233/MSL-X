@@ -1,13 +1,10 @@
 import os
 import math
-import json
 import time
-import subprocess as sp
 import webbrowser as wb
+from functools import reduce
 from typing import TYPE_CHECKING
 
-import psutil
-import requests
 from loguru import logger
 from flet import (
     app,
@@ -34,7 +31,8 @@ import ui.settings as Settings
 import ui.confcl as CreateConf
 from ui.Navbar import nav_side as navbar
 from lib.nginxconfig import *
-from lib.confctl import ConfCtl
+from lib.info_classes import ProgramInfo
+from lib.confctl import ConfCtl,LoadServerInfoToServer, SaveServerInfoToConf
 
 if TYPE_CHECKING:
     from flet import Page, FilePickerResultEvent
@@ -44,18 +42,12 @@ if TYPE_CHECKING:
 def main(page: 'Page'):
 
     PluginEntry.before_run("main", page)
-    use_java = 'java'  # 保存Java路径，为'JAVA'时使用环境变量(默认)
-    xms = 1  # G省略
-    xmx = 4
-    server_path = ''
-    server_file = 'server.jar'
-    server_options = '-XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled -Dusing.aikars.flags=mcflags.emc.gs'
-    vsmem = psutil.virtual_memory()
-    xmx = math.floor((vsmem.total - vsmem.used)/1000000000*0.7)
-    name = "Default"
-    hitokoto_html = requests.get(
-        url="https://v1.hitokoto.cn/?c=i&encode=json&charset=utf-8")
-    hitokoto = json.loads(hitokoto_html.text)
+    current_server = LoadServerInfoToServer()
+    if os.path.exists("Config/Default.json") == False: # 如果默认配置不存在就保存默认配置
+        conf = ConfCtl("Default")
+        conf.Save_Config()
+    programinfo = ProgramInfo()
+    hitokoto = programinfo.hitokoto
 
     if not os.path.exists("Config"):
         os.mkdir("Config")
@@ -64,66 +56,27 @@ def main(page: 'Page'):
     if not os.path.exists("Config/__init__.py"):
         with open('__init__.py', 'w') as f:
             f.write('')
+            
     logger.add('Logs/{time:YYYY-MM-DD}.log', format='[ {time:HH:mm:ss} ][ {level} ] {message} ', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
     def init_page():
 
-        nonlocal hitokoto,name,server_file,server_options,server_path,xms,xmx,use_java
+        nonlocal hitokoto,current_server
+        text = hitokoto["hitokoto"][:-1]
         page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
-        page.fonts = {
+        page.fonts = \
+        {
             "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
         page.theme = Theme(font_family="SHS_SC")
-        
-        if os.path.exists("Config/Default.json"): # 加载默认配置
-            with open("Config/Default.json") as f:
-                conf = ConfCtl("Default")
-                conf.Load_Config()
-                server_path = conf.server_path
-                server_file = conf.server
-                use_java = conf.java                
-                xms = conf.xms
-                xmx = conf.xmx
-                name = conf.name
-                for option in conf.jvm_options:
-                    server_options += f"{option} "
-                page.title += f" | {name}"
-                    
-        else: # 如果默认配置不存在就保存默认配置
-            conf = ConfCtl()
-            conf.server_path = server_path
-            conf.server = server_file
-            conf.java = use_java
-            conf.xms = xms
-            conf.xmx = xmx
-            conf.name = "Default"
-            conf.jvm_options = server_options.split(' ')
-            conf.Save_Config()
 
     def start_server(e):
-        if xms > xmx:
-            warn_ram = AlertDialog(
-                title=Text("警告"),
-                content=Text("最小内存不能大于最大内存"),
-                open=True, modal=True)
-            page.add(warn_ram)
-            page.update()
-            time.sleep(1.5)
-            warn_ram.open = False
-            page.update()
-            return
-        if txt_server_name.value:
-            server_file = txt_server_name.value + ".jar"
-        else:
-            server_file = 'server.jar'
-        server = server_path + os.sep + server_file
-        sp.run(
-            f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",
-            check=True, shell=True, cwd=server_path
-        )
+        nonlocal programinfo
+        current_server.start()
+        programinfo.running_server_list.append(current_server)
 
     def create_controls():  # 设置控件
 
@@ -145,10 +98,14 @@ def main(page: 'Page'):
         )
 
         global txt_server_option
-        txt_server_option = TextField(
+        server_option_str = ""
+        for index in current_server.server_options:
+            server_option_str += f"{index} "
+        txt_server_option = TextField\
+        (
             label="服务器启动参数",
             width=300,
-            value=server_options,
+            value=server_option_str,
             read_only=True
         )
 
@@ -156,7 +113,8 @@ def main(page: 'Page'):
         dd_choose_java = Dropdown(
             label="Java选择",
             width=150,
-            options=[
+            options=\
+            [
                 dropdown.Option("Path"),
                 dropdown.Option("Choose Java File"),
             ],
@@ -173,17 +131,19 @@ def main(page: 'Page'):
             label="服务端名称(不需要.jar后缀),默认为server", width=300
         )
 
-        global sli_xms, sli_xmx
+        global xms, sli_xms, sli_xmx
         sli_xms = Slider(
-            label="最小内存(G)", width=500, divisions=xmx-1, min=1, max=xmx, on_change=change_xms
+            label="最小内存(G)", width=500,
+            divisions=current_server.xmx-1, min=1, max=current_server.xmx, on_change=change_xms
         )
         sli_xmx = Slider(
-            label="最大内存(G)", width=500, divisions=xmx - xms, min=1, max=xmx, on_change=change_xmx
+            label="最大内存(G)", width=500, 
+            divisions=current_server.xmx - current_server.xms, min=1, max=current_server.xmx, on_change=change_xmx
         )
 
-        global text_xms, text_xmx
-        text_xms = Text(f"最小内存:{xms}G")
-        text_xmx = Text(f"最大内存:{xmx}G")
+        global xmx, text_xms, text_xmx
+        text_xms = Text(f"最小内存:{current_server.xms}G")
+        text_xmx = Text(f"最大内存:{current_server.xmx}G")
 
         nonlocal hitokoto
         btn_hitokoto = TextButton(hitokoto["hitokoto"], on_click=open_hitokoto)
@@ -219,7 +179,7 @@ def main(page: 'Page'):
         page.update()
 
     def change_java(e):
-        nonlocal use_java
+        nonlocal current_server
 
         def get_result(e: 'FilePickerResultEvent'):
             if e.files is None:
@@ -229,8 +189,12 @@ def main(page: 'Page'):
                 nonlocal use_java
                 use_java = file_result
             else:
-                alert_warn_not_chosed_java = AlertDialog(
-                    title=Text("选择Java失败,请重新选择"), modal=True, open=True)
+                alert_warn_not_chosed_java = AlertDialog\
+                (
+                    title=Text("选择Java失败,请重新选择"), 
+                    modal=True, 
+                    open=True
+                )
                 page.add(alert_warn_not_chosed_java)
                 page.update()
                 time.sleep(3)
@@ -247,8 +211,11 @@ def main(page: 'Page'):
             picker.pick_files(dialog_title="选择Java路径")
 
     def show_java_path(e):
-        alert_show_java_path = AlertDialog(
-            title=Text(f"Java路径(若为java则使用环境变量):{use_java}"), modal=True, open=True
+        alert_show_java_path = AlertDialog\
+        (
+            title=Text(f"Java路径(若为java则使用环境变量):{current_server.use_java}"), 
+            modal=True, 
+            open=True
         )
         page.add(alert_show_java_path)
         page.update()
@@ -257,19 +224,26 @@ def main(page: 'Page'):
         page.update()
 
     def select_server_path(e):
-        nonlocal server_path
-        AlertDialog(
-            title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"), modal=True, open=True
+        nonlocal current_server
+        AlertDialog\
+        (
+            title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"),
+            modal=True, 
+            open=True
         )
 
         def get_result(e: 'FilePickerResultEvent'):
             file_result = e.path
             if file_result:
-                nonlocal server_path
-                server_path = file_result
+                nonlocal current_server
+                current_server.server_path = file_result
             else:
-                alert_warn_not_chosed_java = AlertDialog(
-                    title=Text("选择服务端路径失败,请重新选择"), modal=True, open=True)
+                alert_warn_not_chosed_java = AlertDialog\
+                (
+                    title=Text("选择服务端路径失败,请重新选择"), 
+                    modal=True, 
+                    open=True
+                )
                 page.add(alert_warn_not_chosed_java)
                 page.update()
                 time.sleep(3)
@@ -298,7 +272,8 @@ def main(page: 'Page'):
                 modal=False,
                 title=Text("更改服务端启动选项"),
                 content=Text("服务端启动选项已经解锁,请务必小心!"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -343,7 +318,8 @@ def main(page: 'Page'):
                 modal=False,
                 title=Text("更改服务端启动选项"),
                 content=Text("服务端启动选项已经锁定"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -352,39 +328,31 @@ def main(page: 'Page'):
             page.update()
 
     def change_xms(e):
-        nonlocal xms
+        nonlocal current_server
         assert sli_xms.value is not None
-        xms = math.floor(sli_xms.value)
-        text_xms.value = f"最小内存:{xms}G"
+        current_server.xms = math.floor(sli_xms.value)
+        text_xms.value = f"最小内存:{current_server.xms}G"
         page.update()
 
     def change_xmx(e):
-        nonlocal xmx
+        nonlocal current_server
         assert sli_xmx.value is not None
         xmx = math.floor(sli_xmx.value)
+        current_server.xmx = xmx
         text_xmx.value = f"最大内存:{xmx}G"
         page.update()
 
     def save_config(e):
-        nonlocal server_path, server_file, use_java, xms, xmx
         txt_conf_name = TextField(
             label="配置文件名称"
             )
         
         def close(e):
-            warn_conf.open = False
-            page.update()
+                warn_conf.open = False
+                page.update()
         
-        if txt_conf_name != "":
-            conf = ConfCtl()
-            conf.server_path = server_path
-            conf.server = server_file
-            conf.java = use_java
-            conf.xms = xms
-            conf.xmx = xmx
-            conf.name = name
-            conf.jvm_options = server_options.split(' ')
-            conf.Save_Config()
+        if txt_conf_name.value != "":
+            conf_save = SaveServerInfoToConf(serverclass=current_server,name=txt_conf_name.value) # type: ignore
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("保存配置文件成功"),
@@ -399,7 +367,8 @@ def main(page: 'Page'):
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("请输入配置文件名称"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -410,7 +379,7 @@ def main(page: 'Page'):
 
     def load_config(e):
         global name
-        nonlocal server_path, server_file, use_java, xms, xmx
+        nonlocal current_server
         def get_result(e: 'FilePickerResultEvent'):
             
             def close(e):
@@ -421,18 +390,8 @@ def main(page: 'Page'):
             if file_result:
                 file_result_array = file_result.split('/') # 切割路径,最后一项为文件名
                 file_name_array = file_result_array[-1].split('.') # 切割后缀
-                conf = ConfCtl(file_name_array[0]) # 传入文件名
-                conf.Load_Config()
-                
-                server_path = conf.server_path
-                server_file = conf.server
-                use_java = conf.java                
-                xms = conf.xms
-                xmx = conf.xmx
-                name = conf.name
-                for option in conf.jvm_options:
-                    server_options += f"{option} "
-                
+                file_name = file_name_array[0]
+                current_server = LoadServerInfoToServer(file_name)
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件成功"),

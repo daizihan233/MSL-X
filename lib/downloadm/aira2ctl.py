@@ -1,12 +1,13 @@
 import subprocess as sp
 from typing import Any
 
-class aira2cc():
+class aira2ctl():
     
-    def __init__(self,aira_path:str="",aira_cmdoptions:list[str]=[''],aira_name:str="aira2c",enable_log_file:str="aira2c_log.txt",dry_run:bool=False,max_concurrent_downloads:int=5,split:int=8,enable_check:Any=False,enable_http_proxy:bool=False,checksum:bool=False,timeout:int=60,max_connection_per_server:int=1,max_try_times:int=10,retry_wait_sec:int=2,min_split_size:int=1,):
+    def __init__(self,aira_path:str="",aira_cmdoptions:list[str]=[''],aira_name:str="aira2c",enable_log_file:str="aira2c_log.txt",dry_run:bool=False,max_concurrent_downloads:int=5,split:int=8,enable_check:Any=False,enable_http_proxy:bool=False,timeout:int=60,max_connection_per_server:int=1,max_try_times:int=10,retry_wait_sec:int=2,min_split_size:int=1,):
         self.aira_path = aira_path
         self.aira_name = aira_name
         self.aira_cmdoptions = aira_cmdoptions
+        self.enable_check = enable_check
         self.included_options = [
             f"--log={enable_log_file}",
             f"--max-concurrent-downloads={max_concurrent_downloads}",
@@ -56,10 +57,12 @@ class aira2cc():
             download_opti = self.aira_cmdoptions
         download_opti += self.included_options
         download_opti.append(f"--out={download_name}",f"--dir={download_path}",download_url)
-        sp.run(self.aira_path + download_opti)
+        self.aira2c = sp.run(self.aira_path + download_opti)
     
-    def check(self,):
-        pass
+    def check(self):
+        if isinstance(self.enable_check,dict):      
+            check_method = self.enable_check["method"]
+            check_sum = self.enable_check["sum"]
+            check_opti = f"--checksum={check_method}={check_sum}"
+            self.aira2c = sp.run(self.aira_path + check_opti)
     
-    def stop(self,):
-        pass
