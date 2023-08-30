@@ -51,7 +51,8 @@ def main(page: Page):
         page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
-        page.fonts = {
+        page.fonts = \
+        {
             "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
@@ -67,10 +68,18 @@ def main(page: Page):
         navbar.on_change = change_navbar
 
         # 开启服务器摁钮
-        btn_start_server = ElevatedButton(
-            "开启服务器", width=700, on_click=start_server)
-        row_ui_top = Row(controls=[btn_start_server],
-                         alignment=MainAxisAlignment.SPACE_EVENLY)
+        btn_start_server = ElevatedButton\
+            (
+                "开启服务器", width=700, on_click=start_server
+            )
+        row_ui_top = Row\
+            (
+                controls=\
+                [
+                    btn_start_server
+                ],
+                alignment=MainAxisAlignment.SPACE_EVENLY
+            )
         page.add(row_ui_top)
 
         # Java与服务端路径
@@ -82,7 +91,8 @@ def main(page: Page):
         server_option_str = ""
         for index in current_server.server_options:
             server_option_str += f"{index} "
-        txt_server_option = TextField(
+        txt_server_option = TextField\
+        (
             label="服务器启动参数",
             width=300,
             value=server_option_str,
@@ -93,7 +103,8 @@ def main(page: Page):
         dd_choose_java = Dropdown(
             label="Java选择",
             width=150,
-            options=[
+            options=\
+            [
                 dropdown.Option("Path"),
                 dropdown.Option("Choose Java File"),
             ],
@@ -127,21 +138,36 @@ def main(page: Page):
         ui_main = Row(
             controls=[navbar, Column(
                 controls=[
-                    Row(controls=[switch_srv_opti_read_only,
-                                  txt_server_option,
-                                  txt_server_name,
-                                  btn_select_server_path,
-                                  dd_choose_java,
-                                  btn_show_java_path],
-                        alignment=MainAxisAlignment.END),
-                    Column(controls=[
-                        Row(controls=[
-                            text_xms,
-                            text_xmx]),
-                        Row(controls=[
-                            sli_xms,
-                            sli_xmx])
-                    ]
+                    Row(
+                        controls=\
+                        [
+                            switch_srv_opti_read_only,
+                            txt_server_option,
+                            txt_server_name,
+                            btn_select_server_path,
+                            dd_choose_java,
+                            btn_show_java_path
+                        ],
+                        alignment=MainAxisAlignment.END
+                        ),
+                    Column(
+                        controls=\
+                        [
+                            Row\
+                            (controls=\
+                                [
+                                    text_xms,
+                                    text_xmx
+                                ]
+                            ),
+                            Row\
+                            (controls=\
+                                [
+                                    sli_xms,
+                                    sli_xmx
+                                ]
+                            )
+                        ]
                     ), btn_hitokoto])])
         page.add(ui_main)
         page.update()
@@ -157,8 +183,12 @@ def main(page: Page):
                 nonlocal use_java
                 use_java = file_result
             else:
-                alert_warn_not_chosed_java = AlertDialog(
-                    title=Text("选择Java失败,请重新选择"), modal=True, open=True)
+                alert_warn_not_chosed_java = AlertDialog\
+                (
+                    title=Text("选择Java失败,请重新选择"), 
+                    modal=True, 
+                    open=True
+                )
                 page.add(alert_warn_not_chosed_java)
                 page.update()
                 time.sleep(3)
@@ -175,8 +205,11 @@ def main(page: Page):
             picker.pick_files(dialog_title="选择Java路径")
 
     def show_java_path(e):
-        alert_show_java_path = AlertDialog(
-            title=Text(f"Java路径(若为java则使用环境变量):{current_server.use_java}"), modal=True, open=True
+        alert_show_java_path = AlertDialog\
+        (
+            title=Text(f"Java路径(若为java则使用环境变量):{current_server.use_java}"), 
+            modal=True, 
+            open=True
         )
         page.add(alert_show_java_path)
         page.update()
@@ -186,8 +219,11 @@ def main(page: Page):
 
     def select_server_path(e):
         nonlocal current_server
-        AlertDialog(
-            title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"), modal=True, open=True
+        AlertDialog\
+        (
+            title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"),
+            modal=True, 
+            open=True
         )
 
         def get_result(e: FilePickerResultEvent):
@@ -196,8 +232,12 @@ def main(page: Page):
                 nonlocal current_server
                 current_server.server_path = file_result
             else:
-                alert_warn_not_chosed_java = AlertDialog(
-                    title=Text("选择服务端路径失败,请重新选择"), modal=True, open=True)
+                alert_warn_not_chosed_java = AlertDialog\
+                (
+                    title=Text("选择服务端路径失败,请重新选择"), 
+                    modal=True, 
+                    open=True
+                )
                 page.add(alert_warn_not_chosed_java)
                 page.update()
                 time.sleep(3)
@@ -226,7 +266,8 @@ def main(page: Page):
                 modal=False,
                 title=Text("更改服务端启动选项"),
                 content=Text("服务端启动选项已经解锁,请务必小心!"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -246,9 +287,9 @@ def main(page: Page):
             warn_change_srv_opti = AlertDialog(
                 modal=False,
                 title=Text("更改服务端启动选项"),
-                content=Text(
-                    "如果您知道自己正在做什么,并且自行承担此操作带来的所有责任,请点击'继续更改';否则,请点击'取消'"),
-                actions=[
+                content=Text("如果您知道自己正在做什么,并且自行承担此操作带来的所有责任,请点击'继续更改';否则,请点击'取消'"),
+                actions=\
+                [
                     TextButton("继续更改", on_click=unlock_srv_opti),
                     TextButton("取消", on_click=close),
                 ],
@@ -270,7 +311,8 @@ def main(page: Page):
                 modal=False,
                 title=Text("更改服务端启动选项"),
                 content=Text("服务端启动选项已经锁定"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -308,7 +350,8 @@ def main(page: Page):
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("保存配置文件成功"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -322,7 +365,8 @@ def main(page: Page):
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("请输入配置文件名称"),
-                actions=[
+                actions=\
+                [
                     TextButton("确认", on_click=close),
                 ],
                 open=True
@@ -349,7 +393,8 @@ def main(page: Page):
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件成功"),
-                    actions=[
+                    actions=\
+                    [
                         TextButton("确认", on_click=close),
                     ],
                     open=True
@@ -363,7 +408,8 @@ def main(page: Page):
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件失败"),
-                    actions=[
+                    actions=\
+                    [
                         TextButton("确认", on_click=close),
                     ],
                     open=True
