@@ -275,22 +275,16 @@ def after_run(name: str, page: 'Page', **kwargs):
                     if bool(need_funcs) == False:
                         if bool(need_vars) == False:
                             if need_page == False:
-                                target_thread_class.run(
-                            target=target_func)
+                                target_thread_class.run(target=target_func)
                             else:
-                                target_thread_class.run(
-                            target=target_func,page=page)
+                                target_thread_class.run(target=target_func,page=page)
                         else:
                             if need_page == False:
-                                target_thread_class.run(
-                            target=target_func, need_vars=need_vars)
+                                target_thread_class.run(target=target_func, need_vars=need_vars)
                             else:
-                                target_thread_class.run(
-                            target=target_func, need_vars=need_vars,page=page)
+                                target_thread_class.run(target=target_func, need_vars=need_vars,page=page)
                     else:
                         if need_page == False:
-                            target_thread_class.run(
-                            target=target_func, need_vars=need_vars, need_funcs=need_funcs)
+                            target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs)
                         else:
-                            target_thread_class.run(
-                            target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
+                            target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
