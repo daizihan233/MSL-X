@@ -1,10 +1,16 @@
-from Plugins import *
-import Plugins.PluginList as PluginList
-import flet
 import gc
 import importlib
-from threading import Thread
+from typing import Callable, TYPE_CHECKING
+
 from loguru import logger
+
+from Plugins import *
+import Plugins.PluginList as PluginList
+
+if TYPE_CHECKING:
+    from threading import Thread
+
+    from flet import Page
 
 logger.add('Logs/{time:YYYY-MM-DD}-PluginEntry.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
@@ -16,7 +22,7 @@ on_load_classes_dict = {}
 on_enable_classes_dict = {}
 on_disable_classes_dict = {}
 
-def before_run(name: str, page: flet.Page):
+def before_run(name: str, page: 'Page', **kwargs):
     logger.debug(f"在{name}初始化之前调用总入口点")
     logger.debug(f"当前Plugin List:{PluginList.Pluginlist}")
     for index in PluginList.Pluginlist:
@@ -28,9 +34,9 @@ def before_run(name: str, page: flet.Page):
                 call_vars = {}
                 use_thread_class = False
                 target_func: Callable = index["EntryPoint"]
-                target_thread_class: Thread
-                need_funcs: List = []
-                need_vars: List = []
+                target_thread_class: 'Thread'
+                need_funcs: list = []
+                need_vars: list = []
                 need_page = False
 
                 # 此处开始处理插件注册的信息
@@ -72,12 +78,10 @@ def before_run(name: str, page: flet.Page):
                                             if "mode" in dict_keys and "type" in dict_keys and "value" in dict_keys:  # 是合法字典,开始处理
                                                 match target_dict["type"]:
                                                     case "class":
-                                                        target_load_class = getattr(
-                                                            m, target_dict["value"])
+                                                        target_load_class = getattr(m, target_dict["value"])
                                                         if target_load_class != None:
                                                             global on_load_classes_dict
-                                                            on_load_classes_dict["Plugins." +
-                                                                                 file_Name] = target_dict["value"]
+                                                            on_load_classes_dict[f'Plugins.{file_Name}'] = target_dict['value']
                                 gc.collect()                                        
 
                 # 处理完成,准备调用
@@ -101,32 +105,25 @@ def before_run(name: str, page: flet.Page):
                         else:
                             target_func(page,need_funcs=need_funcs,need_vars=need_vars)
                 else:
-                    target_thread_class.run(
-                        target=target_func, need_vars=need_vars, need_funcs=need_funcs)
+                    target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs)
                     if bool(need_funcs) == False:
                         if bool(need_vars) == False:
                             if need_page == False:
-                                target_thread_class.run(
-                            target=target_func)
+                                target_thread_class.run(target=target_func)
                             else:
-                                target_thread_class.run(
-                            target=target_func,page=page)
+                                target_thread_class.run(target=target_func,page=page)
                         else:
                             if need_page == False:
-                                target_thread_class.run(
-                            target=target_func, need_vars=need_vars)
+                                target_thread_class.run(target=target_func, need_vars=need_vars)
                             else:
-                                target_thread_class.run(
-                            target=target_func, need_vars=need_vars,page=page)
+                                target_thread_class.run(target=target_func, need_vars=need_vars,page=page)
                     else:
                         if need_page == False:
-                            target_thread_class.run(
-                            target=target_func, need_vars=need_vars, need_funcs=need_funcs)
+                            target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs)
                         else:
-                            target_thread_class.run(
-                            target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
+                            target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
 
-def after_run(name: str, page: flet.Page, **kwargs):
+def after_run(name: str, page: 'Page', **kwargs):
     logger.debug(f"在{name}初始化之后调用总入口点")
     for index in PluginList.Pluginlist:
         if index["Loadtime"] == 'after':
@@ -139,7 +136,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                 call_vars = {}
                 use_thread_class = False
                 target_func: Callable = index["EntryPoint"]
-                target_thread_class: Thread
+                target_thread_class: 'Thread'
                 need_funcs: List = []
                 need_vars: List = []
                 need_page = False
@@ -211,8 +208,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                             m, target_dict["value"])
                                                         if target_load_class != None:
                                                             global on_load_classes_dict
-                                                            on_load_classes_dict["Plugins." +
-                                                                                 file_Name] = target_dict["value"]
+                                                            on_load_classes_dict[f'Plugins.{file_Name}'] = target_dict["value"]
 
                                     case "on_enable":  # 处理on_enable键传入的参数
                                         if dict_events[key][0] == "func":  # 是函数
@@ -220,7 +216,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                 m, dict_events["on_enable"])
                                             if on_enable_func != None:
                                                 global on_enable_func_dict
-                                                on_enable_func_dict["Plugins."+file_Name] = on_enable_func
+                                                on_enable_func_dict[f'Plugins.{file_Name}'] = on_enable_func
 
                                         elif isinstance(dict_events[key], dict):  # 是字典
                                             target_dict = dict_events[key]
@@ -232,7 +228,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                             m, target_dict["value"])
                                                         if target_enable_class != None:
                                                             global on_enable_classes_dict
-                                                            on_enable_classes_dict["Plugins."+file_Name] = target_dict["value"]
+                                                            on_enable_classes_dict[f'Plugins.{file_Name}'] = target_dict["value"]
 
                                     case "on_disable":  # 处理on_disable键传入的参数
                                         if dict_events[key][0] == "func":  # 是函数
@@ -240,7 +236,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                 m, dict_events["on_disable"])
                                             if on_disable_func != None:
                                                 global on_disable_func_dict
-                                                on_disable_func_dict["Plugins."+file_Name] = on_disable_func
+                                                on_disable_func_dict[f'Plugins.{file_Name}'] = on_disable_func
 
                                         elif isinstance(dict_events[key], dict):  # 是字典
                                             target_dict = dict_events[key]
@@ -252,7 +248,7 @@ def after_run(name: str, page: flet.Page, **kwargs):
                                                             m, target_dict["value"])
                                                         if target_disable_class != None:
                                                             global on_disable_classes_dict
-                                                            on_disable_classes_dict["Plugins."+file_Name] = target_dict["value"]
+                                                            on_disable_classes_dict[f'Plugins.{file_Name}'] = target_dict["value"]
                                 gc.collect()                                        
 
                 # 处理完成,准备调用

@@ -1,28 +1,47 @@
-from flet import *
-
 import os
-import psutil
 import math
-import requests
 import json
 import time
 import subprocess as sp
-import webbrowser as web
+import webbrowser as wb
+from typing import TYPE_CHECKING
+
+import psutil
+import requests
 from loguru import logger
+from flet import (
+    app,
+    Row,
+    Text,
+    Theme,
+    Column,
+    Slider,
+    Switch,
+    dropdown,
+    Dropdown,
+    TextField,
+    TextButton,
+    FilePicker,
+    AlertDialog,
+    ElevatedButton,
+    MainAxisAlignment,
+)
 
-from lib.nginxconfig import *
-from lib.confctl import ConfCtl
-
+import PluginEntry
 import ui.logs as logs
 import ui.frpconfig as FrpConfig
 import ui.settings as Settings
 import ui.confcl as CreateConf
 from ui.Navbar import nav_side as navbar
+from lib.nginxconfig import *
+from lib.confctl import ConfCtl
 
-import PluginEntry
+if TYPE_CHECKING:
+    from flet import Page, FilePickerResultEvent
+
 
 @logger.catch
-def main(page: Page):
+def main(page: 'Page'):
 
     PluginEntry.before_run("main", page)
     use_java = 'java'  # 保存Java路径，为'JAVA'时使用环境变量(默认)
@@ -50,7 +69,6 @@ def main(page: Page):
     def init_page():
 
         nonlocal hitokoto,name,server_file,server_options,server_path,xms,xmx,use_java
-        text = hitokoto["hitokoto"][:-1]
         page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
@@ -102,8 +120,10 @@ def main(page: Page):
         else:
             server_file = 'server.jar'
         server = server_path + os.sep + server_file
-        sp.run(f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",
-               check=True, shell=True, cwd=server_path)
+        sp.run(
+            f"{use_java} -Xms{xms}G -Xmx{xmx}G {server_options} -jar {server}",
+            check=True, shell=True, cwd=server_path
+        )
 
     def create_controls():  # 设置控件
 
@@ -111,15 +131,18 @@ def main(page: Page):
 
         # 开启服务器摁钮
         btn_start_server = ElevatedButton(
-            "开启服务器", width=700, on_click=start_server)
-        row_ui_top = Row(controls=[btn_start_server],
-                         alignment=MainAxisAlignment.SPACE_EVENLY)
-        page.add(row_ui_top)
+            "开启服务器", width=700, on_click=start_server
+        )
+        page.add(Row(
+            controls=[btn_start_server],
+            alignment=MainAxisAlignment.SPACE_EVENLY
+        ))
 
         # Java与服务端路径
         global switch_srv_opti_read_only
         switch_srv_opti_read_only = Switch(
-            label="只读", on_change=change_srv_opti_read_only)
+            label="只读", on_change=change_srv_opti_read_only
+        )
 
         global txt_server_option
         txt_server_option = TextField(
@@ -141,53 +164,64 @@ def main(page: Page):
         )
         global txt_server_name
         btn_show_java_path = ElevatedButton(
-            "显示Java路径", on_click=show_java_path)
+            "显示Java路径", on_click=show_java_path
+        )
         btn_select_server_path = ElevatedButton(
-            "选取服务端路径", on_click=select_server_path)
+            "选取服务端路径", on_click=select_server_path
+        )
         txt_server_name = TextField(
-            label="服务端名称(不需要.jar后缀),默认为server", width=300)
+            label="服务端名称(不需要.jar后缀),默认为server", width=300
+        )
 
-        global sli_xms
-        global sli_xmx
-        sli_xms = Slider(label="最小内存(G)", width=500,
-                         divisions=xmx-1, min=1, max=xmx, on_change=change_xms)
-        sli_xmx = Slider(label="最大内存(G)", width=500, divisions=xmx -
-                         xms, min=1, max=xmx, on_change=change_xmx)
+        global sli_xms, sli_xmx
+        sli_xms = Slider(
+            label="最小内存(G)", width=500, divisions=xmx-1, min=1, max=xmx, on_change=change_xms
+        )
+        sli_xmx = Slider(
+            label="最大内存(G)", width=500, divisions=xmx - xms, min=1, max=xmx, on_change=change_xmx
+        )
 
-        global text_xms
-        global text_xmx
+        global text_xms, text_xmx
         text_xms = Text(f"最小内存:{xms}G")
         text_xmx = Text(f"最大内存:{xmx}G")
 
         nonlocal hitokoto
         btn_hitokoto = TextButton(hitokoto["hitokoto"], on_click=open_hitokoto)
 
-        ui_main = Row(
-            controls=[navbar, Column(
-                controls=[
-                    Row(controls=[switch_srv_opti_read_only,
-                                  txt_server_option,
-                                  txt_server_name,
-                                  btn_select_server_path,
-                                  dd_choose_java,
-                                  btn_show_java_path],
-                        alignment=MainAxisAlignment.END),
-                    Column(controls=[
-                        Row(controls=[
-                            text_xms,
-                            text_xmx]),
-                        Row(controls=[
-                            sli_xms,
-                            sli_xmx])
-                    ]
-                    ), btn_hitokoto])])
+        ui_main = Row(controls=[
+            navbar,
+            Column(controls=[
+                Row(
+                    controls=[
+                        switch_srv_opti_read_only,
+                        txt_server_option,
+                        txt_server_name,
+                        btn_select_server_path,
+                        dd_choose_java,
+                        btn_show_java_path
+                    ],
+                    alignment=MainAxisAlignment.END
+                ),
+                Column(controls=[
+                    Row(controls=[
+                        text_xms,
+                        text_xmx
+                    ]),
+                    Row(controls=[
+                        sli_xms,
+                        sli_xmx
+                    ])
+                ]),
+                btn_hitokoto
+            ])
+        ])
         page.add(ui_main)
         page.update()
 
     def change_java(e):
         nonlocal use_java
 
-        def get_result(e: FilePickerResultEvent):
+        def get_result(e: 'FilePickerResultEvent'):
             if e.files is None:
                 raise
             file_result = e.files[0].path
@@ -228,7 +262,7 @@ def main(page: Page):
             title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"), modal=True, open=True
         )
 
-        def get_result(e: FilePickerResultEvent):
+        def get_result(e: 'FilePickerResultEvent'):
             file_result = e.path
             if file_result:
                 nonlocal server_path
@@ -282,15 +316,16 @@ def main(page: Page):
                 page.update()
 
             warn_change_srv_opti = AlertDialog(
-                modal=False,
                 title=Text("更改服务端启动选项"),
                 content=Text(
-                    "如果您知道自己正在做什么,并且自行承担此操作带来的所有责任,请点击'继续更改';否则,请点击'取消'"),
+                    "如果您知道自己正在做什么,并且自行承担此操作带来的所有责任,请点击'继续更改';否则,请点击'取消'"
+                ),
                 actions=[
                     TextButton("继续更改", on_click=unlock_srv_opti),
                     TextButton("取消", on_click=close),
                 ],
-                open=True
+                modal=False,
+                open=True,
             )
             page.add(warn_change_srv_opti)
             page.update()
@@ -318,16 +353,14 @@ def main(page: Page):
 
     def change_xms(e):
         nonlocal xms
-        if sli_xms.value is None:
-            raise
+        assert sli_xms.value is not None
         xms = math.floor(sli_xms.value)
         text_xms.value = f"最小内存:{xms}G"
         page.update()
 
     def change_xmx(e):
         nonlocal xmx
-        if sli_xmx.value is None:
-            raise
+        assert sli_xmx.value is not None
         xmx = math.floor(sli_xmx.value)
         text_xmx.value = f"最大内存:{xmx}G"
         page.update()
@@ -337,6 +370,10 @@ def main(page: Page):
         txt_conf_name = TextField(
             label="配置文件名称"
             )
+        
+        def close(e):
+            warn_conf.open = False
+            page.update()
         
         if txt_conf_name != "":
             conf = ConfCtl()
@@ -348,9 +385,6 @@ def main(page: Page):
             conf.name = name
             conf.jvm_options = server_options.split(' ')
             conf.Save_Config()
-            def close(e):
-                warn_conf.open = False
-                page.update()
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("保存配置文件成功"),
@@ -362,9 +396,6 @@ def main(page: Page):
             page.add(warn_conf)
             
         else:
-            def close(e):
-                warn_conf.open = False
-                page.update()
             warn_conf = AlertDialog(
                 modal=False,
                 title=Text("请输入配置文件名称"),
@@ -380,7 +411,12 @@ def main(page: Page):
     def load_config(e):
         global name
         nonlocal server_path, server_file, use_java, xms, xmx
-        def get_result(e: FilePickerResultEvent):
+        def get_result(e: 'FilePickerResultEvent'):
+            
+            def close(e):
+                warn_conf.open = False
+                page.update()
+            
             file_result = e.path
             if file_result:
                 file_result_array = file_result.split('/') # 切割路径,最后一项为文件名
@@ -396,10 +432,7 @@ def main(page: Page):
                 name = conf.name
                 for option in conf.jvm_options:
                     server_options += f"{option} "
-                    
-                def close(e):
-                    warn_conf.open = False
-                    page.update()
+                
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件成功"),
@@ -409,11 +442,7 @@ def main(page: Page):
                     open=True
                 )
                 page.add(warn_conf)
-                
             else:
-                def close(e):
-                    warn_conf.open = False
-                    page.update()
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件失败"),
@@ -432,7 +461,7 @@ def main(page: Page):
 
     def open_hitokoto(e):
         uuid = hitokoto["uuid"]
-        web.open(f"https://hitokoto.cn?uuid={uuid}")
+        wb.open(f"https://hitokoto.cn?uuid={uuid}")
 
     def change_navbar(e):
 
@@ -461,14 +490,18 @@ def main(page: Page):
             page.update()
 
         def opendoc():
-            web.open("https://mojavehao.github.io/MSL-X/#/")
+            wb.open("https://mojavehao.github.io/MSL-X/#/")
 
         def showinfo():
             def close(e):
                 about.open = False
                 page.update()
-            about = AlertDialog(title=Text("MSLX Beta 0.07"), modal=True, open=True, actions=[
-                                TextButton("确认", on_click=close),],)
+            about = AlertDialog(
+                title=Text("MSLX Beta 0.07"),
+                actions=[TextButton("确认", on_click=close)],
+                modal=True,
+                open=True,
+            )
             page.add(about)
             page.update()
 
