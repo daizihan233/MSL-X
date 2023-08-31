@@ -72,8 +72,8 @@ def LoadServerInfoToServer(name:str="Default",full_path=""):
     )
     return server
 
-def SaveServerInfoToConf(serverclass:Any,name:str="Default"): # type: ignore
-    cfctl = ConfCtl(name)
+def SaveServerInfoToConf(serverclass:Any,name:str="Default",full_path:str=""): # type: ignore
+    cfctl = ConfCtl(name=name,full_path=full_path)
     cfctl.xms = serverclass.xms
     cfctl.xmx = serverclass.xmx
     cfctl.java = serverclass.use_java

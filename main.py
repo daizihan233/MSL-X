@@ -344,41 +344,45 @@ def main(page: 'Page'):
         page.update()
 
     def save_config(e):
-        global is_save_name_txt
-        txt_conf_name = TextField(
-            label="配置文件名称"
-            )
-        is_save_name_txt = True
-        page.add(txt_conf_name)
+        nonlocal current_server
         
-        def close(e):
-            warn_conf.open = False
-            page.update()
+        def get_result(e: FilePickerResultEvent):
+            nonlocal current_server
+            
+            def close(e):
+                warn_conf.open = False
+                page.update()
+            
+            file_result = e.path
+            if file_result:
+                logger.debug(f"获取到的文件路径:{file_result}")
+                if "json" not in file_result:
+                    file_result += ".json"
+                current_server = SaveServerInfoToConf(current_server,full_path=file_result)
+                warn_conf = AlertDialog(
+                    modal=False,
+                    title=Text("保存配置文件成功"),
+                    actions=[
+                        TextButton("确认", on_click=close),
+                    ],
+                    open=True
+                )
+                page.add(warn_conf)
+            else:
+                warn_conf = AlertDialog(
+                    modal=False,
+                    title=Text("保存配置文件失败"),
+                    actions=[
+                        TextButton("确认", on_click=close),
+                    ],
+                    open=True
+                )
+                page.add(warn_conf)
         
-        if txt_conf_name.value != "":
-            conf_save = SaveServerInfoToConf(serverclass=current_server,name=txt_conf_name.value) # type: ignore
-            warn_conf = AlertDialog(
-                modal=False,
-                title=Text("保存配置文件成功"),
-                actions=[
-                    TextButton("确认", on_click=close),
-                ],
-                open=True
-            )
-            page.add(warn_conf)
-            
-        else:
-            warn_conf = AlertDialog(
-                modal=False,
-                title=Text("请输入配置文件名称"),
-                actions=\
-                [
-                    TextButton("确认", on_click=close),
-                ],
-                open=True
-            )
-            page.add(warn_conf)
-            
+        picker = FilePicker(on_result=get_result)
+        page.overlay.append(picker)
+        page.update()
+        picker.save_file(dialog_title="保存配置文件",file_name="Default",initial_directory=os.path.abspath("Config"+os.sep),file_type=FilePickerFileType.CUSTOM,allowed_extensions=["json"])
         page.update()
 
     def load_config(e):
@@ -416,18 +420,6 @@ def main(page: 'Page'):
                     open=True
                 )
                 page.add(warn_conf)
-
-        global is_save_name_txt
-        try:
-            if is_save_name_txt == True:
-                logger.debug("检测到存在配置文件输入框")
-                page.controls.pop()   
-                logger.debug("尝试弹出控件")
-                is_save_name_txt = False
-                logger.debug("重置变量状态")
-                page.update()    
-        except:
-            pass
                 
         picker = FilePicker(on_result=get_result)
         page.overlay.append(picker)
