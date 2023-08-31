@@ -1,8 +1,15 @@
-import flet
-from flet import *
+from flet import \
+(
+   Theme,
+   TextField,
+   Dropdown,
+   dropdown,
+   ElevatedButton,
+   Row 
+)
 
 import sys,os
-sys.path.append(os.getcwd())
+sys.path.append("..")
 from lib.crypt import AES_encrypt,AES_decrypt
 from lib.crypt import RSA_encrypt,RSA_decrypt
 

@@ -1,5 +1,11 @@
-import flet
-from flet import *
+from flet import \
+(
+    Theme,
+    Text,
+    TextField,
+    Row,
+    Column
+)
 from .Navbar import nav_side as navbar
 
 def init_page(page):

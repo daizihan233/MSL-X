@@ -1,5 +1,15 @@
-import flet
-from flet import *
+from flet import \
+(
+    Theme,
+    TextField,
+    ElevatedButton,
+    Row,
+    Column,
+    AlertDialog,
+    Text,
+    TextButton,
+    
+)
 from .Navbar import nav_side as navbar
 
 import subprocess as sp

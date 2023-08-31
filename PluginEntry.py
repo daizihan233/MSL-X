@@ -140,8 +140,8 @@ def after_run(name: str, page: 'Page', **kwargs):
                 use_thread_class = False
                 target_func: Callable = index["EntryPoint"]
                 target_thread_class: 'Thread'
-                need_funcs: List = []
-                need_vars: List = []
+                need_funcs: list = []
+                need_vars: list = []
                 need_page = False
 
                 # 此处开始处理插件注册的信息

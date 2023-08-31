@@ -1,5 +1,13 @@
-import flet
-from flet import *
+from flet import \
+(
+    Theme,
+    Dropdown,
+    dropdown,
+    TextField,
+    ElevatedButton,
+    Row,
+    Column
+)
 import subprocess as sp
 import random
 import requests

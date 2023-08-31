@@ -2,11 +2,11 @@ import os
 import math
 import time
 import webbrowser as wb
-import shutil
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from flet import (
+from flet import \
+(
     app,
     Row,
     Text,
@@ -43,10 +43,11 @@ if TYPE_CHECKING:
 def main(page: 'Page'):
 
     PluginEntry.before_run("main", page)
-    current_server = LoadServerInfoToServer()
     if os.path.exists("Config/Default.json") == False: # 如果默认配置不存在就保存默认配置
         conf = ConfCtl("Default")
         conf.Save_Config()
+    else:
+        current_server = LoadServerInfoToServer()
     programinfo = ProgramInfo()
     hitokoto = programinfo.hitokoto
 

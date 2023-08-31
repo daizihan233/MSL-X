@@ -1,5 +1,11 @@
-import flet
-from flet import *
+from flet import \
+(
+    Theme,
+    TextField,
+    Switch,
+    Row,
+    Column
+)
 from .Navbar import nav_side as navbar
     
 def init_page(page):
@@ -14,7 +20,7 @@ def init_page(page):
     page.update()
     
 def create_controls(page):
-    txt_download_threads = TextField(label="下载线程数",value=16)
+    txt_download_threads = TextField(label="下载线程数",value="16")
     auto_run_server = TextField(label="启动时默认配置文件名称",value="Default")
     auto_run_selector = Switch(label="自动启动服务器开关")
     auto_run_frpc = Switch(label="自动启动frpc开关(由于frpc配置未制作完成而暂时禁用)")

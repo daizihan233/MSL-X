@@ -1,5 +1,9 @@
-import flet
-from flet import *
+from flet import \
+(
+    NavigationRail,
+    NavigationRailDestination,
+    icons
+)
 
 nav_side = NavigationRail(
         selected_index=0,

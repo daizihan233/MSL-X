@@ -1,4 +1,10 @@
-from flet import *
+from flet import \
+(
+    Theme,
+    ElevatedButton,
+    Row,
+    Column
+)
 from .Navbar import nav_side as navbar
 
 def init_page(page):

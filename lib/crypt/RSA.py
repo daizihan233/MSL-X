@@ -34,11 +34,11 @@ def read_private_key(file_path="crypto_private_key.pem") -> bytes:
 # ------------------------加密------------------------
 def RSA_encrypt(text: str, public_key: bytes):
     # 字符串指定编码（转为bytes）
-    text = text.encode('utf-8')
+    text_bytes = text.encode('utf-8')
     # 构建公钥对象
     cipher_public = PKCS1_v1_5.new(RSA.importKey(public_key))
     # 加密（bytes）
-    text_encrypted = cipher_public.encrypt(text)
+    text_encrypted = cipher_public.encrypt(text_bytes)
     # base64编码，并转为字符串
     text_encrypted_base64 = base64.b64encode(text_encrypted).decode()
     return text_encrypted_base64
@@ -46,9 +46,9 @@ def RSA_encrypt(text: str, public_key: bytes):
 # ------------------------解密------------------------
 def RSA_decrypt(text_encrypted_base64: str, private_key: bytes):
     # 字符串指定编码（转为bytes）
-    text_encrypted_base64 = text_encrypted_base64.encode('utf-8')
+    text_encrypted_base64_bytes = text_encrypted_base64.encode('utf-8')
     # base64解码
-    text_encrypted = base64.b64decode(text_encrypted_base64)
+    text_encrypted = base64.b64decode(text_encrypted_base64_bytes)
     # 构建私钥对象
     cipher_private = PKCS1_v1_5.new(RSA.importKey(private_key))
     # 解密（bytes）

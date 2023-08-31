@@ -1,8 +1,8 @@
-from flet import Page,dropdown,TextField,Theme,Dropdown,ElevatedButton,Row,AlertDialog,TextButton
+from flet import Page,dropdown,TextField,Theme,Dropdown,ElevatedButton,Row,AlertDialog,TextButton,Text
 import pyperclip as clip
 
 import sys,os
-sys.path.append(os.getcwd())
+sys.path.append("..")
 from lib.crypt import AES_encrypt,AES_decrypt
 from lib.crypt import RSA_encrypt,RSA_decrypt
     
@@ -66,7 +66,7 @@ def process_gen(e):
     if dd_mode.value == "AES":    
         aes_key = txt_aes_key.value
         result = AES_encrypt(org_str=txt_passwd.value,key=aes_key)
-        finish = AlertDialog(title="完成！",content=f"你已经完成了AES加密密码的创建流程,信息如下:\nPasswd:{result}\nKey:{aes_key}",actions=[
+        finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了AES加密密码的创建流程,信息如下:\nPasswd:{result}\nKey:{aes_key}"),actions=[
                 TextButton("确认", on_click=close),
                 TextButton("复制信息到剪贴板", on_click=copy_aes),
             ],open=True)
@@ -82,7 +82,7 @@ def process_gen(e):
         with open("./pub_key.pem", "wb") as f:
             f.write(pub_key)
         result = RSA_encrypt(text=txt_passwd.value,public_key=pub_key)
-        finish = AlertDialog(title="完成！",content=f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPasswd:{result}",actions=[
+        finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPasswd:{result}"),actions=[
                 TextButton("确认", on_click=close),
                 TextButton("复制信息到剪贴板", on_click=copy_rsa),
             ],open=True)

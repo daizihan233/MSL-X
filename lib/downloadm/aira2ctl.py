@@ -56,8 +56,13 @@ class aira2ctl():
         if download_opti == []:
             download_opti = self.aira_cmdoptions
         download_opti += self.included_options
-        download_opti.append(f"--out={download_name}",f"--dir={download_path}",download_url)
-        self.aira2c = sp.run(self.aira_path + download_opti)
+        download_opti.append(f"--out={download_name}")
+        download_opti.append(f"--dir={download_path}")
+        download_opti.append(download_url)
+        download_opti_str = ""
+        for item in download_opti:
+            download_opti_str += item
+        self.aira2c = sp.run(self.aira_path + download_opti_str)
     
     def check(self):
         if isinstance(self.enable_check,dict):      
