@@ -1,14 +1,14 @@
 import json
 from loguru import logger
 from typing import Any
+from os import sep
 from .info_classes import SingleServerInfo
 logger.add('Logs/{time:YYYY-MM-DD}-ConfCtl.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
 
 class ConfCtl():
     
-    def __init__(self,name:str="Default"):
+    def __init__(self,name:str="Default",full_path=""):
         self.name = name
-        self.path = f'Config/{name}.json'
         self.xms = 1
         self.xmx = 4
         self.java = "java"
@@ -17,6 +17,11 @@ class ConfCtl():
         self.server_path = ""
         self.description = ""
         self.name = "Default"
+        if full_path == "":
+            self.path = f'Config{sep}{name}.json'
+        else:
+            self.path = full_path
+            logger.debug(f"已使用{full_path}替换self.path")
     
     @logger.catch
     def Load_Config(self):
@@ -51,8 +56,8 @@ class ConfCtl():
                 }
             json.dump(conf_dict,fl)
             
-def LoadServerInfoToServer(name:str="Default"):
-    cfctl = ConfCtl(name)
+def LoadServerInfoToServer(name:str="Default",full_path=""):
+    cfctl = ConfCtl(name=name,full_path=full_path)
     cfctl.Load_Config()
     server = SingleServerInfo\
     (

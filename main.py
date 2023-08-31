@@ -2,7 +2,7 @@ import os
 import math
 import time
 import webbrowser as wb
-from functools import reduce
+import shutil
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -19,6 +19,8 @@ from flet import (
     TextField,
     TextButton,
     FilePicker,
+    FilePickerFileType,
+    FilePickerResultEvent,
     AlertDialog,
     ElevatedButton,
     MainAxisAlignment,
@@ -35,8 +37,7 @@ from lib.info_classes import ProgramInfo
 from lib.confctl import ConfCtl,LoadServerInfoToServer, SaveServerInfoToConf
 
 if TYPE_CHECKING:
-    from flet import Page, FilePickerResultEvent
-
+    from flet import Page
 
 @logger.catch
 def main(page: 'Page'):
@@ -343,13 +344,16 @@ def main(page: 'Page'):
         page.update()
 
     def save_config(e):
+        global is_save_name_txt
         txt_conf_name = TextField(
             label="配置文件名称"
             )
+        is_save_name_txt = True
+        page.add(txt_conf_name)
         
         def close(e):
-                warn_conf.open = False
-                page.update()
+            warn_conf.open = False
+            page.update()
         
         if txt_conf_name.value != "":
             conf_save = SaveServerInfoToConf(serverclass=current_server,name=txt_conf_name.value) # type: ignore
@@ -380,18 +384,19 @@ def main(page: 'Page'):
     def load_config(e):
         global name
         nonlocal current_server
-        def get_result(e: 'FilePickerResultEvent'):
+        def get_result(e: FilePickerResultEvent):
             
             def close(e):
                 warn_conf.open = False
                 page.update()
             
-            file_result = e.path
+            file_result = e.files
             if file_result:
-                file_result_array = file_result.split('/') # 切割路径,最后一项为文件名
-                file_name_array = file_result_array[-1].split('.') # 切割后缀
-                file_name = file_name_array[0]
-                current_server = LoadServerInfoToServer(file_name)
+                file_name = file_result[0].name
+                src_path = file_result[0].path
+                logger.debug(f"获取到的文件名:{file_name}")
+                logger.debug(f"获取到的文件路径:{src_path}")
+                current_server = LoadServerInfoToServer(full_path=src_path)
                 warn_conf = AlertDialog(
                     modal=False,
                     title=Text("加载配置文件成功"),
@@ -412,10 +417,22 @@ def main(page: 'Page'):
                 )
                 page.add(warn_conf)
 
+        global is_save_name_txt
+        try:
+            if is_save_name_txt == True:
+                logger.debug("检测到存在配置文件输入框")
+                page.controls.pop()   
+                logger.debug("尝试弹出控件")
+                is_save_name_txt = False
+                logger.debug("重置变量状态")
+                page.update()    
+        except:
+            pass
+                
         picker = FilePicker(on_result=get_result)
         page.overlay.append(picker)
         page.update()
-        picker.get_directory_path(dialog_title="选择服务端路径")
+        picker.pick_files(dialog_title="选择配置文件",initial_directory=os.path.abspath("Config"+os.sep),file_type=FilePickerFileType.CUSTOM,allowed_extensions=["json"])
         page.update()
 
     def open_hitokoto(e):

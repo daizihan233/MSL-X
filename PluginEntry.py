@@ -13,7 +13,6 @@ import Plugins.PluginList as PluginList
 
 if TYPE_CHECKING:
     from threading import Thread
-
     from flet import Page
 
 logger.add('Logs/{time:YYYY-MM-DD}-PluginEntry.log', format='[{time:HH:mm:ss}][{level}] {message}', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
