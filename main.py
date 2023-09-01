@@ -2,6 +2,8 @@ import os
 import math
 import time
 import webbrowser as wb
+import subprocess as sp
+import pyperclip as clip
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -21,18 +23,22 @@ from flet import \
     FilePicker,
     FilePickerFileType,
     FilePickerResultEvent,
+    KeyboardEvent,
     AlertDialog,
     ElevatedButton,
     MainAxisAlignment,
 )
 
 import PluginEntry
+
 import ui.logs as logs
 import ui.frpconfig as FrpConfig
 import ui.settings as Settings
 import ui.confcl as CreateConf
+import ui.nginxconf as NginxConfUI
 from ui.Navbar import nav_side as navbar
-from lib.nginxconfig import *
+
+from lib.nginxconfig import NgConf
 from lib.info_classes import ProgramInfo
 from lib.confctl import ConfCtl,LoadServerInfoToServer, SaveServerInfoToConf
 
@@ -50,6 +56,7 @@ def main(page: 'Page'):
         current_server = LoadServerInfoToServer()
     programinfo = ProgramInfo()
     hitokoto = programinfo.hitokoto
+    text = hitokoto["hitokoto"][:-1]
 
     if not os.path.exists("Config"):
         os.mkdir("Config")
@@ -63,8 +70,7 @@ def main(page: 'Page'):
 
     def init_page():
 
-        nonlocal hitokoto,current_server
-        text = hitokoto["hitokoto"][:-1]
+        nonlocal current_server,programinfo
         page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
@@ -74,6 +80,9 @@ def main(page: 'Page'):
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
         page.theme = Theme(font_family="SHS_SC")
+        page.on_keyboard_event = on_keyboard
+        programinfo.update_hitokoto()
+        page.update()
 
     def start_server(e):
         nonlocal programinfo
@@ -147,8 +156,8 @@ def main(page: 'Page'):
         text_xms = Text(f"最小内存:{current_server.xms}G")
         text_xmx = Text(f"最大内存:{current_server.xmx}G")
 
-        nonlocal hitokoto
-        btn_hitokoto = TextButton(hitokoto["hitokoto"], on_click=open_hitokoto)
+        nonlocal text
+        btn_hitokoto = TextButton(text, on_click=open_hitokoto)
 
         ui_main = Row(controls=[
             navbar,
@@ -428,10 +437,88 @@ def main(page: 'Page'):
         picker.pick_files(dialog_title="选择配置文件",initial_directory=os.path.abspath("Config"+os.sep),file_type=FilePickerFileType.CUSTOM,allowed_extensions=["json"])
         page.update()
 
+    def detect_nginx(e):
+        
+        def close(e):
+            warn_type_choose.open = False
+            page.update()
+            
+        def detect_ng_linux(e):
+            
+            def close(e):
+                warn_result.open = False
+                warn_type_choose.open = False
+                page.update()
+                
+            def copy(e):
+                clip.copy(f"Path:{wri}\nNginx -V Info:{ngv}")
+            
+            wri = sp.run("whereis nginx",shell=True).stdout
+            ngv = sp.run("nginx -V",shell=True).stdout    
+            txt_pathto.value = wri.decode()
+            warn_result = AlertDialog\
+            (
+                modal = False,
+                title = Text("检测结果"),
+                content = Text(f"Path:{wri}\nNginx -V Info:{ngv}"),
+                actions=\
+                [
+                    TextButton("确定", on_click=close),
+                    TextButton("复制", on_click=copy),
+                ],
+                open=True
+            )
+            page.add(warn_result)
+            page.update()
+            
+        def detect_ng_winpath(e):
+            
+            nonlocal close
+            close(e)
+            
+        warn_type_choose = AlertDialog(
+            modal = False,
+            title = Text("选择检测方法"),
+            actions=[
+                TextButton("自动检测Path(Linux)", on_click=detect_ng_linux),
+                TextButton("调用EverythingSDK(Windows)", on_click=close),
+                TextButton("检测Windows环境变量(不推荐)", on_click=detect_ng_winpath),
+            ],
+            open=True
+        )
+        page.add(warn_type_choose)
+        page.update()   
+
+    def ident_path(e):
+        global ngpath
+        ngpath = txt_pathto.value
+
     def open_hitokoto(e):
         uuid = hitokoto["uuid"]
         wb.open(f"https://hitokoto.cn?uuid={uuid}")
 
+    def on_keyboard(e: KeyboardEvent):
+        key = e.key
+        shift = e.shift
+        ctrl = e.ctrl
+        alt = e.alt
+        meta = e.meta
+        if key == "F5":
+            page.update()
+        if alt:
+            if shift:
+                match key:
+                    case "N": # 打开Nginx配置页面
+                        pass   
+                    case "L": # 打开登陆界面
+                        pass   
+                    case "G": # 打开密钥创建界面 
+                        pass
+                    case "D": # 打开下载页面
+                        pass
+                    case "P": # 打开插件列表
+                        pass
+        
     def change_navbar(e):
 
         def clrpage():
@@ -487,6 +574,17 @@ def main(page: 'Page'):
             btn_load_config = ElevatedButton("加载服务器配置", on_click=load_config)
             page.add(
                 Row(controls=[navbar, Column(controls=[btn_save_config, btn_load_config])]))
+            page.update()
+            
+        def ngconfpage():
+            clrpage()
+            NginxConfUI.init_page(page)
+            global txt_pathto
+            txt_pathto = TextField(label="Nginx路径",height=400,multiline=True)
+            btn_confirm = ElevatedButton("确认",on_click=ident_path)
+            btn_auto_detect = ElevatedButton("检测",on_click=detect_nginx)
+            row_top = Row(controls=[btn_confirm,btn_auto_detect])
+            page.add(Row(controls=[navbar,Column(controls=[txt_pathto,row_top])]))
             page.update()
 
         index = e.control.selected_index
