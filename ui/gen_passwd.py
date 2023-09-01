@@ -3,8 +3,8 @@ import pyperclip as clip
 
 import sys,os
 sys.path.append("..")
-from lib.crypt import AES_encrypt,AES_decrypt
-from lib.crypt import RSA_encrypt,RSA_decrypt
+#from lib.crypt import AES_encrypt,AES_decrypt
+#from lib.crypt import RSA_encrypt,RSA_decrypt
     
 def init_page(page:Page):
     page.title = "MSLX | Panel Password Genrate"

@@ -1,7 +1,6 @@
 from typing import Callable
 from Plugins import *
 import Plugins.PluginList as PluginList
-import flet as ft
 import gc
 import importlib
 from typing import Callable, TYPE_CHECKING
@@ -291,3 +290,11 @@ def after_run(name: str, page: 'Page', **kwargs):
                             target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs)
                         else:
                             target_thread_class.run(target=target_func, need_vars=need_vars, need_funcs=need_funcs,page=page)
+                            
+def enable_plugin(name: str):
+    if name in on_enable_func_dict.keys():
+        on_enable_func_dict[name]()
+    elif name in on_enable_classes_dict.keys():
+        pass
+    else:
+        logger.error(f"没有找到{name}的开启时方法")

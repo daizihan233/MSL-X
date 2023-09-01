@@ -507,6 +507,13 @@ def main(page: 'Page'):
             page.update()
         if alt:
             if shift:
+                if key == "D":
+                    logger.info("准备更新依赖")
+                    sp.run("pipreqs --mode no-pin ./ --encoding=utf8  --debug --force")
+                    logger.info("已更新requirements.txt")
+                    sp.run("pip install -r requirements.txt --upgrade")
+                    logger.info("已下载/更新了所有MSLX所依赖的包")
+                '''
                 match key:
                     case "N": # 打开Nginx配置页面
                         pass   
@@ -518,6 +525,12 @@ def main(page: 'Page'):
                         pass
                     case "P": # 打开插件列表
                         pass
+                    case "D":
+                        logger.info("准备更新依赖")
+                        sp.run("pipreqs --mode no-pin ./ --encoding=utf8  --debug --force")
+                        sp.run("pip install -r requirements.txt --upgrade")
+                        logger.info("已更新requirements.txt并自动下载/更新了所有MSLX所依赖的包")
+                '''
         
     def change_navbar(e):
 
@@ -613,4 +626,4 @@ def main(page: 'Page'):
     PluginEntry.after_run("main", page)
     logger.debug("总入口点已调用")
 
-app(target=main, assets_dir="assets", port=61500)
+app(target=main, assets_dir="assets")
