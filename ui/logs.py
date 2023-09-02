@@ -1,17 +1,9 @@
-from flet import \
-(
-    Theme,
-    Text,
-    TextField,
-    Row,
-    Column
-)
-from .Navbar import nav_side as navbar
+from flet import Theme
 
 def init_page(page):
     page.title = "MSLX | 日志"
     page.window_width = 900
-    page.window_height = 600
+    page.window_height = 550
     page.fonts = \
     {
         "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
