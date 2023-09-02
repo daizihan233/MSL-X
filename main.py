@@ -1,12 +1,11 @@
-from collections.abc import Callable, Iterable, Mapping
 import os
 import math
 import time
-import threading
 import webbrowser as wb
 import subprocess as sp
 import pyperclip as clip
-from typing import TYPE_CHECKING, Any
+from Crypto.PublicKey import RSA
+from typing import TYPE_CHECKING
 
 from loguru import logger
 from flet import \
@@ -31,7 +30,7 @@ from flet import \
     MainAxisAlignment,
 )
 
-import PluginEntry
+import PluginEntry_Beta as PluginEntry
 
 import ui.logs as logs
 import ui.frpconfig as FrpConfig
@@ -43,6 +42,8 @@ from ui.Navbar import nav_side as navbar
 from lib.nginxconfig import NgConf
 from lib.info_classes import ProgramInfo
 from lib.confctl import ConfCtl,LoadServerInfoToServer, SaveServerInfoToConf
+from lib.crypt.AES import AES_encrypt,AES_decrypt
+from lib.crypt.RSA import RSA_encrypt,RSA_decrypt
 
 if TYPE_CHECKING:
     from flet import Page
@@ -54,8 +55,7 @@ def main(page: 'Page'):
     if os.path.exists("Config/Default.json") == False: # 如果默认配置不存在就保存默认配置
         conf = ConfCtl("Default")
         conf.Save_Config()
-    else:
-        current_server = LoadServerInfoToServer()
+    current_server = LoadServerInfoToServer()
     programinfo = ProgramInfo()
     hitokoto = programinfo.hitokoto
     text = hitokoto["hitokoto"][:-1]
@@ -207,7 +207,7 @@ def main(page: 'Page'):
             raise
 
         def get_result(e: 'FilePickerResultEvent'):
-            if e.files is None:
+            if e.files is None or current_server is None:
                 raise
             file_result = e.files[0].path
             if file_result:
@@ -236,6 +236,8 @@ def main(page: 'Page'):
             picker.pick_files(dialog_title="选择Java路径")
 
     def show_java_path(e):
+        if current_server is None:
+            raise
         alert_show_java_path = AlertDialog\
         (
             title=Text(f"Java路径(若为java则使用环境变量):{current_server.use_java}"), 
@@ -261,6 +263,8 @@ def main(page: 'Page'):
         )
 
         def get_result(e: 'FilePickerResultEvent'):
+            if current_server is None:
+                raise
             file_result = e.path
             if file_result:
                 nonlocal current_server
@@ -356,6 +360,8 @@ def main(page: 'Page'):
             page.update()
 
     def change_xms(e):
+        if current_server is None:
+            raise
         nonlocal current_server
         assert sli_xms.value is not None
         current_server.xms = math.floor(sli_xms.value)
@@ -363,6 +369,8 @@ def main(page: 'Page'):
         page.update()
 
     def change_xmx(e):
+        if current_server is None:
+            raise
         nonlocal current_server
         assert sli_xmx.value is not None
         xmx = math.floor(sli_xmx.value)
@@ -602,6 +610,86 @@ def main(page: 'Page'):
     def open_hitokoto(e):
         uuid = hitokoto["uuid"]
         wb.open(f"https://hitokoto.cn?uuid={uuid}")
+        
+    def test_aes_create(e):
+        if page is None or page.controls is None:
+            raise
+        
+        global txt_aes_key
+    
+        if dd_mode.value == 'AES' and len(page.controls) < 3:
+            txt_passwd.height = 200
+            txt_aes_key = TextField(label="在此输入AES将使用的key,登陆时须和您的密钥一起使用",width=850,height=200,can_reveal_password=True,multiline=True)
+            page.add(txt_aes_key)
+            page.update()
+            
+        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
+            page.controls.pop()
+            page.update()
+
+    def process_gen(e):
+        
+        if txt_passwd is None or txt_passwd.value is None:
+            raise
+        
+        def close(e):
+            finish.open=False
+            
+        def copy_rsa(e):
+            content = f"[RSA Login Info]\nPasswd:{result}"    
+            clip.copy(content)
+        
+        def copy_aes(e):
+            content = f"[AES Login Info]\nPasswd:{result}\nKey:{aes_key}"    
+            clip.copy(content)
+            
+        if dd_mode.value == "AES":    
+            aes_key = txt_aes_key.value
+            result = AES_encrypt(org_str=txt_passwd.value,key=aes_key)
+            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了AES加密密码的创建流程,信息如下:\nPasswd:{result}\nKey:{aes_key}"),actions=[
+                    TextButton("确认", on_click=close),
+                    TextButton("复制信息到剪贴板", on_click=copy_aes),
+                ],open=True)
+            page.add(finish)
+            page.update()
+            
+        if dd_mode.value == "RSA":    
+            key = RSA.generate(2048)
+            pri_key = key.export_key()
+            with open("./pri_key.pem", "wb") as f:
+                f.write(pri_key)
+            pub_key = key.public_key().export_key()
+            with open("./pub_key.pem", "wb") as f:
+                f.write(pub_key)
+            result = RSA_encrypt(text=txt_passwd.value,public_key=pub_key)
+            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPasswd:{result}"),actions=[
+                    TextButton("确认", on_click=close),
+                    TextButton("复制信息到剪贴板", on_click=copy_rsa),
+                ],open=True)
+            page.add(finish)
+            page.update()
+        
+    def process_login(e):
+        '''
+        type = dd_choose_java.value
+        if type == 'AES':
+            AES_decrypt(txt_passwd.value, key) 
+        '''
+        pass
+        
+    def test_aes_login(e):
+        if page.controls is None:
+            raise
+        
+        if dd_mode.value == 'AES' and len(page.controls) < 3:
+            txt_passwd.height = 200
+            txt_aes_key = TextField(label="在此输入AES使用的key",width=850,height=200,can_reveal_password=True,multiline=True)
+            page.add(txt_aes_key)
+            page.update()
+            
+        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
+            page.controls.pop()
+            page.update()
 
     def on_keyboard(e: KeyboardEvent):
         key = e.key
@@ -638,6 +726,45 @@ def main(page: 'Page'):
                     page.update()
                 elif key == "N": # 打开Nginx配置页面
                     ngconfpage()
+                elif key == "G":
+                    global txt_passwd
+                    txt_passwd = TextField(label="在此输入您的原始密码",width=850,height=400,can_reveal_password=True,multiline=True)
+                    
+                    global dd_mode
+                    dd_mode = Dropdown(
+                        label = "方法选择",
+                        options=[
+                        dropdown.Option("AES"),
+                        dropdown.Option("RSA"),
+                        ],
+                        width=500,
+                        autofocus=True,
+                        on_change=test_aes_create
+                    )
+                    btn_gen = ElevatedButton("创建",width=100,on_click=process_gen)
+                    row_top = Row(controls=[dd_mode,btn_gen])
+                    page.add(row_top,txt_passwd)
+                    page.update()
+                    
+                elif key == "L":
+                    global txt_passwd
+                    txt_passwd = TextField(label="在此输入您的密钥",width=850,height=400,can_reveal_password=True,multiline=True)
+                    
+                    global dd_mode
+                    dd_mode = Dropdown(
+                        label = "方法选择",
+                        options=[
+                        dropdown.Option("AES"),
+                        dropdown.Option("RSA"),
+                        ],
+                        width=500,
+                        autofocus=True,
+                        on_change=test_aes_login
+                    )
+                    btn_login = ElevatedButton("登录",width=100,on_click=process_login)
+                    row_top = Row(controls=[dd_mode,btn_login])
+                    page.add(row_top,txt_passwd)
+                    page.update()
                 '''
                 match key:
                     case "N": # 打开Nginx配置页面
