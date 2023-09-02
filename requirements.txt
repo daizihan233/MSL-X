@@ -3,7 +3,6 @@ loguru
 multitasking
 psutil
 pycryptodome
-pipreqs
 pyperclip
 Requests
 retry

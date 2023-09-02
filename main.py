@@ -1,10 +1,12 @@
+from collections.abc import Callable, Iterable, Mapping
 import os
 import math
 import time
+import threading
 import webbrowser as wb
 import subprocess as sp
 import pyperclip as clip
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from flet import \
@@ -82,16 +84,26 @@ def main(page: 'Page'):
         page.theme = Theme(font_family="SHS_SC")
         page.on_keyboard_event = on_keyboard
         programinfo.update_hitokoto()
+        if programinfo.name != "":
+            page.title += f" | {programinfo.name}"
         page.update()
 
     def start_server(e):
-        nonlocal programinfo
+        nonlocal programinfo,current_server
+        if current_server is None or txt_server_name.value is None:
+            raise
+        programinfo.name = current_server.name
+        page.update()
+        if txt_server_name.value != "":
+            current_server.server_file = txt_server_name.value
         current_server.start()
         programinfo.running_server_list.append(current_server)
 
     def create_controls():  # 设置控件
 
         navbar.on_change = change_navbar
+        if current_server is None:
+            raise
 
         # 开启服务器摁钮
         btn_start_server = ElevatedButton(
@@ -191,14 +203,16 @@ def main(page: 'Page'):
 
     def change_java(e):
         nonlocal current_server
+        if current_server is None:
+            raise
 
         def get_result(e: 'FilePickerResultEvent'):
             if e.files is None:
                 raise
             file_result = e.files[0].path
             if file_result:
-                nonlocal use_java
-                use_java = file_result
+                nonlocal current_server
+                current_server.use_java = file_result
             else:
                 alert_warn_not_chosed_java = AlertDialog\
                 (
@@ -214,7 +228,7 @@ def main(page: 'Page'):
 
         java_option = dd_choose_java.value
         if java_option == 'Path':
-            use_java = 'java'
+            current_server.use_java = 'java'
         else:
             picker = FilePicker(on_result=get_result)
             page.overlay.append(picker)
@@ -236,6 +250,9 @@ def main(page: 'Page'):
 
     def select_server_path(e):
         nonlocal current_server
+        if current_server is None:
+            raise
+        
         AlertDialog\
         (
             title=Text("请勿选择桌面或者根目录!由此带来的任何后果请自行承担责任!"),
@@ -453,36 +470,111 @@ def main(page: 'Page'):
             def copy(e):
                 clip.copy(f"Path:{wri}\nNginx -V Info:{ngv}")
             
-            wri = sp.run("whereis nginx",shell=True).stdout
-            ngv = sp.run("nginx -V",shell=True).stdout    
-            txt_pathto.value = wri.decode()
-            warn_result = AlertDialog\
-            (
-                modal = False,
-                title = Text("检测结果"),
-                content = Text(f"Path:{wri}\nNginx -V Info:{ngv}"),
-                actions=\
-                [
-                    TextButton("确定", on_click=close),
-                    TextButton("复制", on_click=copy),
-                ],
-                open=True
-            )
-            page.add(warn_result)
-            page.update()
+            wri = sp.run("whereis nginx",shell=True)
+            ngv = sp.run("nginx -V",shell=True) 
+            try:   
+                wri.check_returncode()
+            except:
+                warn_result = AlertDialog\
+                (
+                    modal = False,
+                    title = Text("检测失败"),
+                    content = Text(f"未能找到nginx"),
+                    actions=\
+                    [
+                        TextButton("确定", on_click=close),
+                    ],
+                    open=True
+                )
+                page.add(warn_result)
+                page.update()
+            else:
+                try:
+                    ngv.check_returncode()
+                except:
+                    warn_result = AlertDialog\
+                    (
+                        modal = False,
+                        title = Text("检测失败"),
+                        content = Text(f"未能获取nginx版本(请确认已经添加至环境变量)"),
+                        actions=\
+                        [
+                            TextButton("确定", on_click=close),
+                        ],
+                        open=True
+                    )
+                    page.add(warn_result)
+                    page.update()
+                else:
+                    txt_pathto.value = wri.stdout.decode()  
+                    warn_result = AlertDialog\
+                    (
+                        modal = False,
+                        title = Text("检测结果"),
+                        content = Text(f"Path:{wri}\nNginx Info:{ngv}"),
+                        actions=\
+                        [
+                            TextButton("确定", on_click=close),
+                            TextButton("复制", on_click=copy),
+                        ],
+                        open=True
+                    )
+                    page.add(warn_result)
+                    page.update()
             
         def detect_ng_winpath(e):
             
             nonlocal close
-            close(e)
+            
+            def copy(e):
+                clip.copy(f"Path:{ng_path}\nNginx -V Info:{ngv}")
+            
+            dirs = os.environ.get("Path")
+            if dirs is None:
+                raise
+            ng_path = ""
+            for ng_dir in dirs:
+                if os.path.isfile(f"{ng_dir}\\nginx.exe"):
+                    ng_path = ng_dir
+                    break
+            if ng_path != "":
+                ngv = sp.run(ng_path + "nginx.exe -V").stdout.decode()
+                txt_pathto.value = ng_path
+                warn_result = AlertDialog\
+                    (
+                        modal = False,
+                        title = Text("检测结果"),
+                        content = Text(f"Path:{ng_path}\nNginx Info:{ngv}"),
+                        actions=\
+                        [
+                            TextButton("确定", on_click=close),
+                            TextButton("复制", on_click=copy),
+                        ],
+                        open=True
+                    )
+                page.add(warn_result)
+                page.update()
+            else:
+                warn_result = AlertDialog\
+                    (
+                        modal = False,
+                        title = Text("检测失败"),
+                        content = Text(f"未能在环境变量中找到Nginx(请确认已添加至Path变量)"),
+                        actions=\
+                        [
+                            TextButton("确定", on_click=close),
+                        ],
+                        open=True
+                    )
+                page.add(warn_result)
+                page.update()
             
         warn_type_choose = AlertDialog(
             modal = False,
             title = Text("选择检测方法"),
             actions=[
-                TextButton("自动检测Path(Linux)", on_click=detect_ng_linux),
-                TextButton("调用EverythingSDK(Windows)", on_click=close),
-                TextButton("检测Windows环境变量(不推荐)", on_click=detect_ng_winpath),
+                TextButton("检测Path(Linux)", on_click=detect_ng_linux),
+                TextButton("检测环境变量(Windows)", on_click=detect_ng_winpath),
             ],
             open=True
         )
@@ -492,6 +584,20 @@ def main(page: 'Page'):
     def ident_path(e):
         global ngpath
         ngpath = txt_pathto.value
+        
+    def ngconfpage():
+        if page.controls is None:
+            raise
+        page.controls.clear()
+        page.update()
+        NginxConfUI.init_page(page)
+        global txt_pathto
+        txt_pathto = TextField(label="Nginx路径",height=400,multiline=True)
+        btn_confirm = ElevatedButton("确认",on_click=ident_path)
+        btn_auto_detect = ElevatedButton("检测",on_click=detect_nginx)
+        row_top = Row(controls=[btn_confirm,btn_auto_detect])
+        page.add(Row(controls=[navbar,Column(controls=[txt_pathto,row_top])]))
+        page.update()
 
     def open_hitokoto(e):
         uuid = hitokoto["uuid"]
@@ -507,12 +613,31 @@ def main(page: 'Page'):
             page.update()
         if alt:
             if shift:
-                if key == "D":
+                if key == "D": # 更新依赖项
+                    def close(e):
+                        warn_ok.open = False
+                        page.update()
+                        
                     logger.info("准备更新依赖")
                     sp.run("pipreqs --mode no-pin ./ --encoding=utf8  --debug --force")
                     logger.info("已更新requirements.txt")
                     sp.run("pip install -r requirements.txt --upgrade")
                     logger.info("已下载/更新了所有MSLX所依赖的包")
+                    warn_ok = AlertDialog\
+                    (
+                        modal = False,
+                        title = Text("更新完成"),
+                        content = Text(f"已完成依赖项的检测和下载/更新工作"),
+                        actions=\
+                        [
+                            TextButton("确定", on_click=close),
+                        ],
+                        open=True
+                    )
+                    page.add(warn_ok)
+                    page.update()
+                elif key == "N": # 打开Nginx配置页面
+                    ngconfpage()
                 '''
                 match key:
                     case "N": # 打开Nginx配置页面
@@ -532,8 +657,26 @@ def main(page: 'Page'):
                         logger.info("已更新requirements.txt并自动下载/更新了所有MSLX所依赖的包")
                 '''
         
+    def submit_cmd(e):
+        nonlocal current_server
+        if current_server is not None and txt_command.value is not None:
+            current_server.server.communicate(input=txt_command.value)
+            refresh(e)
+            txt_command.value = ""
+            page.update()
+            
+    def refresh(e):
+        nonlocal current_server
+        if current_server is not None:
+            with open(f"{current_server.server_path}{os.sep}logs{os.sep}latest.log","r",encoding="utf-8") as fr:
+                out = fr.read()
+            text_server_logs.value = out
+            page.update()
+    
     def change_navbar(e):
 
+        nonlocal submit_cmd,refresh
+        
         def clrpage():
             if page.controls is None:
                 raise
@@ -547,9 +690,14 @@ def main(page: 'Page'):
             page.update()
 
         def logspage():
+            nonlocal submit_cmd,refresh
+            global txt_command,text_server_logs
             clrpage()
             logs.init_page(page)
-            logs.create_controls(page)
+            text_server_logs = TextField(label="服务器输出",value="Minecraft Server Logs Here...",read_only=True,multiline=True,width=750,height=500)
+            txt_command = TextField(label="在此键入向服务器发送的命令",on_submit=submit_cmd)
+            btn_refresh = ElevatedButton("刷新",on_click=refresh)
+            page.add(Row(controls=[navbar,Column(controls=[text_server_logs,Row(controls=[txt_command,btn_refresh])])]))
             page.update()
 
         def frpcpage():
@@ -587,17 +735,6 @@ def main(page: 'Page'):
             btn_load_config = ElevatedButton("加载服务器配置", on_click=load_config)
             page.add(
                 Row(controls=[navbar, Column(controls=[btn_save_config, btn_load_config])]))
-            page.update()
-            
-        def ngconfpage():
-            clrpage()
-            NginxConfUI.init_page(page)
-            global txt_pathto
-            txt_pathto = TextField(label="Nginx路径",height=400,multiline=True)
-            btn_confirm = ElevatedButton("确认",on_click=ident_path)
-            btn_auto_detect = ElevatedButton("检测",on_click=detect_nginx)
-            row_top = Row(controls=[btn_confirm,btn_auto_detect])
-            page.add(Row(controls=[navbar,Column(controls=[txt_pathto,row_top])]))
             page.update()
 
         index = e.control.selected_index

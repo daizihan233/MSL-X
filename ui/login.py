@@ -10,7 +10,7 @@ from flet import \
 
 import sys,os
 sys.path.append("..")
-#from lib.crypt import AES_encrypt,
+#from lib.crypt import AES_encrypt,AES_decrypt
 #from lib.crypt import RSA_encrypt,RSA_decrypt
 
 def init_page(page):

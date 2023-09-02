@@ -4,7 +4,6 @@ import psutil
 import math
 import os
 import subprocess as sp
-from functools import reduce
 
 class SingleServerInfo():
     def __init__\
@@ -33,7 +32,7 @@ class SingleServerInfo():
         ):
         vsmem = psutil.virtual_memory()
         self.xmx = math.floor(vsmem.free/1000000000*0.7)
-        self.use_java = "java"  # 保存Java路径，为"JAVA"时使用环境变量(默认)
+        self.use_java = use_java  # 保存Java路径，为"JAVA"时使用环境变量(默认)
         self.xms = xms  # G省略
         self.xmx = xmx
         self.descr = descr
@@ -42,8 +41,6 @@ class SingleServerInfo():
         self.server_file = server_file
         self.server_options = server_options
         self.server_option_str = ""
-        for index in self.server_options:
-            self.server_option_str += f"{index} "
         
     def start(self):
         """
@@ -52,11 +49,17 @@ class SingleServerInfo():
         if self.xms > self.xmx:
             return 2
         server_file_path:str = self.server_path + os.sep + self.server_file
-        self.server = sp.run\
+        if ".jar" not in self.server_file:
+            server_file_path += ".jar"
+        server_options_str = ""
+        for index in self.server_options:
+            server_options_str += f"{index} "
+        self.server = sp.Popen\
         (
-            args=f"{self.use_java} -Xms{self.xms}G -Xmx{self.xmx}G {self.server_options} -jar {server_file_path}",
-            check=True, 
-            cwd=self.server_path
+            args=f"{self.use_java} -Xms{self.xms}G -Xmx{self.xmx}G {server_options_str} -jar {server_file_path}",
+            cwd=self.server_path,
+            text=True,
+            stdin=sp.PIPE,
         )
         
 class ProgramInfo():
