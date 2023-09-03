@@ -60,10 +60,11 @@ def main(page: 'Page'):
     hitokoto = programinfo.hitokoto
     text = hitokoto["hitokoto"][:-1]
 
-    if not os.path.exists("Config"):
-        os.mkdir("Config")
-    if not os.path.exists("Logs"):
-        os.mkdir("Logs")
+    create_dirs = ["Config","Logs","Crypt"]
+    for dir_name in create_dirs:
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+            
     if not os.path.exists("Config/__init__.py"):
         with open('__init__.py', 'w') as f:
             f.write('')
@@ -81,7 +82,11 @@ def main(page: 'Page'):
             "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
-        page.theme = Theme(font_family="SHS_SC")
+        global theme_dark,theme_day
+        theme_dark = Theme(font_family="SHS_SC",color_scheme_seed="#1f1e33")
+        theme_day = Theme(font_family="SHS_SC")
+        page.theme = theme_day
+        page.dark_theme = theme_dark
         page.on_keyboard_event = on_keyboard
         programinfo.update_hitokoto()
         if programinfo.name != "":
@@ -611,22 +616,23 @@ def main(page: 'Page'):
         wb.open(f"https://hitokoto.cn?uuid={uuid}")
         
     def test_aes_create(e):
-        if page is None or page.controls is None:
-            raise
-        
         global txt_aes_key,dd_mode
-        if dd_mode is None:
+        if page is None or page.controls is None or dd_mode is None:
             raise
-    
         if dd_mode.value == 'AES' and len(page.controls) < 3:
             txt_passwd.height = 200
             txt_aes_key = TextField(label="在此输入AES将使用的key,登陆时须和您的密钥一起使用",width=850,height=200,can_reveal_password=True,multiline=True)
-            page.add(txt_aes_key)
+            global col_passwd_gen
+            col_passwd_gen.controls.append(txt_aes_key)
             page.update()
             
-        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
-            page.controls.pop()
-            page.update()
+        if dd_mode.value == 'RSA':
+            try:
+                if txt_aes_key in col_passwd_gen.controls:
+                    col_passwd_gen.controls.pop()
+                    page.update()
+            except:
+                pass
 
     def process_gen(e):
         
@@ -635,18 +641,22 @@ def main(page: 'Page'):
         
         def close(e):
             finish.open=False
+            page.update()
             
         def copy_rsa(e):
-            content = f"[RSA Login Info]\nPasswd:{result}"    
+            content = f"[RSA Login Info]\nPrivate Key:{result}\nPublic Key:\n{second_key}"    
             clip.copy(content)
         
         def copy_aes(e):
-            content = f"[AES Login Info]\nPasswd:{result}\nKey:{aes_key}"    
+            content = f"[AES Login Info]\nPasswd:{result}\nKey:{second_key}"    
             clip.copy(content)
+            
+        second_key = ""    
             
         if dd_mode.value == "AES":    
             aes_key = txt_aes_key.value
             result = AES_encrypt(org_str=txt_passwd.value,key=aes_key)
+            second_key = aes_key
             finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了AES加密密码的创建流程,信息如下:\nPasswd:{result}\nKey:{aes_key}"),actions=[
                     TextButton("确认", on_click=close),
                     TextButton("复制信息到剪贴板", on_click=copy_aes),
@@ -657,13 +667,14 @@ def main(page: 'Page'):
         if dd_mode.value == "RSA":    
             key = RSA.generate(2048)
             pri_key = key.export_key()
-            with open("./pri_key.pem", "wb") as f:
+            with open("./Crypt/pri_key.pem", "wb") as f:
                 f.write(pri_key)
             pub_key = key.public_key().export_key()
-            with open("./pub_key.pem", "wb") as f:
+            second_key = pub_key.decode()
+            with open("./Crypt/pub_key.pem", "wb") as f:
                 f.write(pub_key)
             result = RSA_encrypt(text=txt_passwd.value,public_key=pub_key)
-            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPasswd:{result}"),actions=[
+            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPrivate Key:{result}\nPublic Key:\n{second_key}"),actions=[
                     TextButton("确认", on_click=close),
                     TextButton("复制信息到剪贴板", on_click=copy_rsa),
                 ],open=True)
@@ -681,18 +692,28 @@ def main(page: 'Page'):
     def test_aes_login(e):
         if page.controls is None:
             raise
-        
+        global txt_aes_key
+        txt_aes_key = TextField() # 避免未绑定
         if dd_mode.value == 'AES' and len(page.controls) < 3:
             txt_passwd.height = 200
             txt_aes_key = TextField(label="在此输入AES使用的key",width=850,height=200,can_reveal_password=True,multiline=True)
-            page.add(txt_aes_key)
+            global col_passwd_gen
+            col_passwd_gen.controls.append(txt_aes_key)
             page.update()
             
-        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
-            page.controls.pop()
-            page.update()
+        if dd_mode.value == 'RSA':
+            if txt_aes_key in col_passwd_gen.controls:
+                col_passwd_gen.controls.pop()
+                page.update()
 
     def on_keyboard(e: KeyboardEvent):
+        
+        def clrpage():
+            if page.controls is None:
+                raise
+            page.controls.clear()
+            page.update()
+        
         key = e.key
         shift = e.shift
         ctrl = e.ctrl
@@ -726,9 +747,12 @@ def main(page: 'Page'):
                     )
                     page.add(warn_ok)
                     page.update()
+                    
                 elif key == "N": # 打开Nginx配置页面
                     ngconfpage()
+                    
                 elif key == "G":
+                    clrpage()
                     txt_passwd = TextField(label="在此输入您的原始密码",width=850,height=400,can_reveal_password=True,multiline=True)
                     
                     dd_mode = Dropdown(
@@ -742,11 +766,14 @@ def main(page: 'Page'):
                         on_change=test_aes_create
                     )
                     btn_gen = ElevatedButton("创建",width=100,on_click=process_gen)
-                    row_top = Row(controls=[dd_mode,btn_gen])
-                    page.add(row_top,txt_passwd)
+                    global col_passwd_gen
+                    col_passwd_gen = Column(controls=[dd_mode,txt_passwd])
+                    row_top = Row(controls=[navbar,col_passwd_gen,btn_gen])
+                    page.add(row_top)
                     page.update()
                     
                 elif key == "L":
+                    clrpage()
                     txt_passwd = TextField(label="在此输入您的密钥",width=850,height=400,can_reveal_password=True,multiline=True)
                     
                     dd_mode = Dropdown(
@@ -760,8 +787,9 @@ def main(page: 'Page'):
                         on_change=test_aes_login
                     )
                     btn_login = ElevatedButton("登录",width=100,on_click=process_login)
-                    row_top = Row(controls=[dd_mode,btn_login])
-                    page.add(row_top,txt_passwd)
+                    col_passwd_gen = Column(controls=[dd_mode,txt_passwd])
+                    row_top = Row(controls=[navbar,col_passwd_gen,btn_login])
+                    page.add(row_top)
                     page.update()
                 '''
                 match key:
@@ -886,6 +914,6 @@ def main(page: 'Page'):
     logger.debug("页面完成初始化")
 
     PluginEntry.after_run("main", page)
-    logger.debug("总入口点已调用")
+    logger.debug("总入口点已调用完毕")
 
 app(target=main, assets_dir="assets")
