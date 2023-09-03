@@ -211,7 +211,6 @@ def main(page: 'Page'):
                 raise
             file_result = e.files[0].path
             if file_result:
-                nonlocal current_server
                 current_server.use_java = file_result
             else:
                 alert_warn_not_chosed_java = AlertDialog\
@@ -263,11 +262,11 @@ def main(page: 'Page'):
         )
 
         def get_result(e: 'FilePickerResultEvent'):
+            nonlocal current_server
             if current_server is None:
                 raise
             file_result = e.path
             if file_result:
-                nonlocal current_server
                 current_server.server_path = file_result
             else:
                 alert_warn_not_chosed_java = AlertDialog\
@@ -360,18 +359,18 @@ def main(page: 'Page'):
             page.update()
 
     def change_xms(e):
+        nonlocal current_server
         if current_server is None:
             raise
-        nonlocal current_server
         assert sli_xms.value is not None
         current_server.xms = math.floor(sli_xms.value)
         text_xms.value = f"最小内存:{current_server.xms}G"
         page.update()
 
     def change_xmx(e):
+        nonlocal current_server
         if current_server is None:
             raise
-        nonlocal current_server
         assert sli_xmx.value is not None
         xmx = math.floor(sli_xmx.value)
         current_server.xmx = xmx
@@ -701,6 +700,7 @@ def main(page: 'Page'):
             page.update()
         if alt:
             if shift:
+                global txt_passwd
                 if key == "D": # 更新依赖项
                     def close(e):
                         warn_ok.open = False
@@ -727,10 +727,8 @@ def main(page: 'Page'):
                 elif key == "N": # 打开Nginx配置页面
                     ngconfpage()
                 elif key == "G":
-                    global txt_passwd
                     txt_passwd = TextField(label="在此输入您的原始密码",width=850,height=400,can_reveal_password=True,multiline=True)
                     
-                    global dd_mode
                     dd_mode = Dropdown(
                         label = "方法选择",
                         options=[
@@ -747,10 +745,8 @@ def main(page: 'Page'):
                     page.update()
                     
                 elif key == "L":
-                    global txt_passwd
                     txt_passwd = TextField(label="在此输入您的密钥",width=850,height=400,can_reveal_password=True,multiline=True)
                     
-                    global dd_mode
                     dd_mode = Dropdown(
                         label = "方法选择",
                         options=[
