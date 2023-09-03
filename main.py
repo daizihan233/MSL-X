@@ -702,6 +702,7 @@ def main(page: 'Page'):
             page.update()
         if alt:
             if shift:
+                global txt_passwd,dd_mode
                 if key == "D": # 更新依赖项
                     def close(e):
                         warn_ok.open = False
