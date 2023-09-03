@@ -1,4 +1,4 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, Any
 import importlib
 import threading
 import gc
@@ -15,30 +15,77 @@ logger.add('Logs/{time:YYYY-MM-DD}-PluginEntry.log', format='[{time:HH:mm:ss}][{
 on_load_func_dict: Dict[str, Callable] = {}
 on_enable_func_dict: Dict[str, Callable] = {}
 on_disable_func_dict: Dict[str, Callable] = {}
-on_load_classes_dict: Dict[str, str] = {}
-on_enable_classes_dict: Dict[str, str] = {}
-on_disable_classes_dict: Dict[str, str] = {}
+on_load_classes_dict: Dict[str, Any] = {}
+on_enable_classes_dict: Dict[str, Any] = {}
+on_disable_classes_dict: Dict[str, Any] = {}
 
-def process_plugin_events(events, file_name):
+def process_event(event_key: str, event_value: Any, file_name: str, event_dict: Dict[str, Any]) -> None:
+    """
+    处理单个事件，将函数或类存储在全局字典中。
+
+    Args:
+        event_key (str): 事件的键。
+        event_value (Any): 事件的值，可以是函数信息或字典信息。
+        file_name (str): 插件的文件名。
+        event_dict (Dict[str, Any]): 存储事件信息的全局字典。
+    """
+    m = importlib.import_module("Plugins." + file_name)
+    
+    if event_value[0] == "func":
+        # 如果事件值是函数信息，获取函数对象并存储在全局字典中
+        event_func = getattr(m, event_value[1])
+        if event_func is not None:
+            event_dict["Plugins." + file_name] = event_func
+            if event_key == "on_load":
+                global on_load_func_dict
+                on_load_func_dict = { **on_load_func_dict, **event_dict }
+            elif event_key == "on_enable":
+                global on_enable_func_dict
+                on_enable_func_dict = { **on_enable_func_dict, **event_dict }
+            elif event_key == "on_disable":
+                global on_disable_func_dict
+                on_disable_func_dict = { **on_disable_func_dict, **event_dict }
+                
+    elif isinstance(event_value, dict):
+        # 如果事件值是字典信息，检查是否包含必要的键
+        dict_keys = event_value.keys()
+        if "mode" in dict_keys and "type" in dict_keys and "value" in dict_keys:
+            match event_value["type"]:
+                case "class":
+                    # 如果是合法的字典信息，获取类对象并存储在全局字典中
+                    target_class = getattr(m, event_value["value"])
+                    if target_class is not None:
+                        event_dict["Plugins." + file_name] = event_value['value']
+                        if event_key == "on_load":
+                            global on_load_classes_dict
+                            on_load_classes_dict = { **on_load_classes_dict, **event_dict }
+                        elif event_key == "on_enable":
+                            global on_enable_classes_dict
+                            on_enable_classes_dict = { **on_enable_classes_dict, **event_dict }
+                        elif event_key == "on_disable":
+                            global on_disable_classes_dict
+                            on_disable_classes_dict = { **on_disable_classes_dict, **event_dict }
+
+def process_plugin_events(events: Dict[str, Any], file_name: str) -> None:
     """
     处理插件的事件部分，将需要执行的函数或类存储在全局字典中。
 
     Args:
-        events (Dict): 插件定义的事件。
+        events (Dict[str, Any]): 插件定义的事件。
         file_name (str): 插件的文件名。
     """
-    m = importlib.import_module("Plugins." + file_name)
+    
     for event_key, event_value in events.items():
         if event_key == "on_load":
-            if event_value[0] == "func":
-                on_load_func = getattr(m, event_value[1])
-                if on_load_func is not None:
-                    on_load_func_dict["Plugins." + file_name] = on_load_func
+            # 处理 on_load 事件并存储到对应的全局字典中
+            process_event(event_key, event_value, file_name, on_load_func_dict)
         elif event_key == "on_enable":
-            if event_value[0] == "func":
-                on_enable_func = getattr(m, event_value[1])
-                if on_enable_func is not None:
-                    on_enable_func_dict["Plugins." + file_name] = on_enable_func
+            # 处理 on_enable 事件并存储到对应的全局字典中
+            process_event(event_key, event_value, file_name, on_enable_func_dict)
+        elif event_key == "on_disable":
+            # 处理 on_disable 事件并存储到对应的全局字典中
+            process_event(event_key, event_value, file_name, on_disable_func_dict)
+            
 
 def process_plugin_args(need_args, kwargs):
     """
@@ -185,3 +232,17 @@ def enable_plugin(name):
         pass
     else:
         logger.error(f"没有找到{name}的开启时方法")
+
+def disable_plugin(name):
+    """
+    禁用插件时调用的函数。
+
+    Args:
+        name (str): 插件的名称。
+    """
+    if name in on_disable_func_dict:
+        on_disable_func_dict[name]()
+    elif name in on_disable_classes_dict:
+        pass
+    else:
+        logger.error(f"没有找到{name}的禁用时方法")
