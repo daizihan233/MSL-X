@@ -74,7 +74,6 @@ def main(page: 'Page'):
     def init_page():
 
         nonlocal current_server,programinfo
-        page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
         page.fonts = \
@@ -82,15 +81,14 @@ def main(page: 'Page'):
             "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
-        global theme_dark,theme_day
         theme_dark = Theme(font_family="SHS_SC",color_scheme_seed="#1f1e33")
         theme_day = Theme(font_family="SHS_SC")
         page.theme = theme_day
         page.dark_theme = theme_dark
         page.on_keyboard_event = on_keyboard
         programinfo.update_hitokoto()
-        if programinfo.name != "":
-            page.title += f" | {programinfo.name}"
+        if programinfo.title != "":
+            page.title = programinfo.title
         page.update()
 
     def start_server(e):
@@ -107,6 +105,7 @@ def main(page: 'Page'):
     def create_controls():  # 设置控件
 
         navbar.on_change = change_navbar
+        nonlocal current_server
         if current_server is None:
             raise
 
@@ -126,14 +125,12 @@ def main(page: 'Page'):
         )
 
         global txt_server_option
-        server_option_str = ""
-        for index in current_server.server_options:
-            server_option_str += f"{index} "
+        current_server.server_options
         txt_server_option = TextField\
         (
             label="服务器启动参数",
             width=300,
-            value=server_option_str,
+            value=current_server.server_option_str,
             read_only=True
         )
 

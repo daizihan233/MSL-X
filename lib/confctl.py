@@ -12,11 +12,23 @@ class ConfCtl():
         self.xms = 1
         self.xmx = 4
         self.java = "java"
-        self.jvm_options = []
         self.server = "server"
         self.server_path = ""
         self.description = ""
         self.name = "Default"
+        self.jvm_options = \
+        [
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:MaxGCPauseMillis=100",
+            "-XX:+DisableExplicitGC",
+            "-XX:TargetSurvivorRatio=90", 
+            "-XX:G1NewSizePercent=50", 
+            "-XX:G1MaxNewSizePercent=80",
+            "-XX:G1MixedGCLiveThresholdPercent=35", 
+            "-XX:+AlwaysPreTouch", 
+            "-XX:+ParallelRefProcEnabled", 
+            "-Dusing.aikars.flags=mcflags.emc.gs"
+        ]
         if full_path == "":
             self.path = f'Config{sep}{name}.json'
         else:

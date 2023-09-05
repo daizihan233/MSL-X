@@ -41,6 +41,8 @@ class SingleServerInfo():
         self.server_file = server_file
         self.server_options = server_options
         self.server_option_str = ""
+        for item in self.server_options:
+            self.server_option_str += item
         
     def start(self):
         """
@@ -65,6 +67,8 @@ class SingleServerInfo():
 class ProgramInfo():
     def __init__(self,name:str="Default"):
         self.name = name
+        self.page = "主页"
+        self.title = f"MSLX | {self.name} | {self.page}"
         self.update_hitokoto()
         self.running_server_list = []
         
