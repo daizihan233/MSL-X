@@ -60,10 +60,11 @@ def main(page: 'Page'):
     hitokoto = programinfo.hitokoto
     text = hitokoto["hitokoto"][:-1]
 
-    if not os.path.exists("Config"):
-        os.mkdir("Config")
-    if not os.path.exists("Logs"):
-        os.mkdir("Logs")
+    create_dirs = ["Config","Logs","Crypt"]
+    for dir_name in create_dirs:
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+            
     if not os.path.exists("Config/__init__.py"):
         with open('__init__.py', 'w') as f:
             f.write('')
@@ -73,7 +74,6 @@ def main(page: 'Page'):
     def init_page():
 
         nonlocal current_server,programinfo
-        page.title = f"MSLX | 主页"
         page.window_height = 600
         page.window_width = 1350
         page.fonts = \
@@ -81,11 +81,14 @@ def main(page: 'Page'):
             "SHS_TC": "fonts/SourceHanSansTC-Regular.otf",
             "SHS_SC": "fonts/SourceHanSansSC-Regular.otf"
         }
-        page.theme = Theme(font_family="SHS_SC")
+        theme_dark = Theme(font_family="SHS_SC",color_scheme_seed="#1f1e33")
+        theme_day = Theme(font_family="SHS_SC")
+        page.theme = theme_day
+        page.dark_theme = theme_dark
         page.on_keyboard_event = on_keyboard
         programinfo.update_hitokoto()
-        if programinfo.name != "":
-            page.title += f" | {programinfo.name}"
+        if programinfo.title != "":
+            page.title = programinfo.title
         page.update()
 
     def start_server(e):
@@ -102,6 +105,7 @@ def main(page: 'Page'):
     def create_controls():  # 设置控件
 
         navbar.on_change = change_navbar
+        nonlocal current_server
         if current_server is None:
             raise
 
@@ -121,14 +125,12 @@ def main(page: 'Page'):
         )
 
         global txt_server_option
-        server_option_str = ""
-        for index in current_server.server_options:
-            server_option_str += f"{index} "
+        current_server.server_options
         txt_server_option = TextField\
         (
             label="服务器启动参数",
             width=300,
-            value=server_option_str,
+            value=current_server.server_option_str,
             read_only=True
         )
 
@@ -211,7 +213,6 @@ def main(page: 'Page'):
                 raise
             file_result = e.files[0].path
             if file_result:
-                nonlocal current_server
                 current_server.use_java = file_result
             else:
                 alert_warn_not_chosed_java = AlertDialog\
@@ -263,11 +264,11 @@ def main(page: 'Page'):
         )
 
         def get_result(e: 'FilePickerResultEvent'):
+            nonlocal current_server
             if current_server is None:
                 raise
             file_result = e.path
             if file_result:
-                nonlocal current_server
                 current_server.server_path = file_result
             else:
                 alert_warn_not_chosed_java = AlertDialog\
@@ -360,18 +361,18 @@ def main(page: 'Page'):
             page.update()
 
     def change_xms(e):
+        nonlocal current_server
         if current_server is None:
             raise
-        nonlocal current_server
         assert sli_xms.value is not None
         current_server.xms = math.floor(sli_xms.value)
         text_xms.value = f"最小内存:{current_server.xms}G"
         page.update()
 
     def change_xmx(e):
+        nonlocal current_server
         if current_server is None:
             raise
-        nonlocal current_server
         assert sli_xmx.value is not None
         xmx = math.floor(sli_xmx.value)
         current_server.xmx = xmx
@@ -612,20 +613,23 @@ def main(page: 'Page'):
         wb.open(f"https://hitokoto.cn?uuid={uuid}")
         
     def test_aes_create(e):
-        if page is None or page.controls is None:
+        global txt_aes_key,dd_mode
+        if page is None or page.controls is None or dd_mode is None:
             raise
-        
-        global txt_aes_key
-    
         if dd_mode.value == 'AES' and len(page.controls) < 3:
             txt_passwd.height = 200
             txt_aes_key = TextField(label="在此输入AES将使用的key,登陆时须和您的密钥一起使用",width=850,height=200,can_reveal_password=True,multiline=True)
-            page.add(txt_aes_key)
+            global col_passwd_gen
+            col_passwd_gen.controls.append(txt_aes_key)
             page.update()
             
-        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
-            page.controls.pop()
-            page.update()
+        if dd_mode.value == 'RSA':
+            try:
+                if txt_aes_key in col_passwd_gen.controls:
+                    col_passwd_gen.controls.pop()
+                    page.update()
+            except:
+                pass
 
     def process_gen(e):
         
@@ -634,18 +638,22 @@ def main(page: 'Page'):
         
         def close(e):
             finish.open=False
+            page.update()
             
         def copy_rsa(e):
-            content = f"[RSA Login Info]\nPasswd:{result}"    
+            content = f"[RSA Login Info]\nPrivate Key:{result}\nPublic Key:\n{second_key}"    
             clip.copy(content)
         
         def copy_aes(e):
-            content = f"[AES Login Info]\nPasswd:{result}\nKey:{aes_key}"    
+            content = f"[AES Login Info]\nPasswd:{result}\nKey:{second_key}"    
             clip.copy(content)
+            
+        second_key = ""    
             
         if dd_mode.value == "AES":    
             aes_key = txt_aes_key.value
             result = AES_encrypt(org_str=txt_passwd.value,key=aes_key)
+            second_key = aes_key
             finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了AES加密密码的创建流程,信息如下:\nPasswd:{result}\nKey:{aes_key}"),actions=[
                     TextButton("确认", on_click=close),
                     TextButton("复制信息到剪贴板", on_click=copy_aes),
@@ -656,13 +664,14 @@ def main(page: 'Page'):
         if dd_mode.value == "RSA":    
             key = RSA.generate(2048)
             pri_key = key.export_key()
-            with open("./pri_key.pem", "wb") as f:
+            with open("./Crypt/pri_key.pem", "wb") as f:
                 f.write(pri_key)
             pub_key = key.public_key().export_key()
-            with open("./pub_key.pem", "wb") as f:
+            second_key = pub_key.decode()
+            with open("./Crypt/pub_key.pem", "wb") as f:
                 f.write(pub_key)
             result = RSA_encrypt(text=txt_passwd.value,public_key=pub_key)
-            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPasswd:{result}"),actions=[
+            finish = AlertDialog(title=Text("完成！"),content=Text(f"你已经完成了RSA加密密钥的创建流程,信息如下:\nPrivate Key:{result}\nPublic Key:\n{second_key}"),actions=[
                     TextButton("确认", on_click=close),
                     TextButton("复制信息到剪贴板", on_click=copy_rsa),
                 ],open=True)
@@ -680,18 +689,28 @@ def main(page: 'Page'):
     def test_aes_login(e):
         if page.controls is None:
             raise
-        
+        global txt_aes_key
+        txt_aes_key = TextField() # 避免未绑定
         if dd_mode.value == 'AES' and len(page.controls) < 3:
             txt_passwd.height = 200
             txt_aes_key = TextField(label="在此输入AES使用的key",width=850,height=200,can_reveal_password=True,multiline=True)
-            page.add(txt_aes_key)
+            global col_passwd_gen
+            col_passwd_gen.controls.append(txt_aes_key)
             page.update()
             
-        if dd_mode.value == 'RSA' and len(page.controls) >= 3:
-            page.controls.pop()
-            page.update()
+        if dd_mode.value == 'RSA':
+            if txt_aes_key in col_passwd_gen.controls:
+                col_passwd_gen.controls.pop()
+                page.update()
 
     def on_keyboard(e: KeyboardEvent):
+        
+        def clrpage():
+            if page.controls is None:
+                raise
+            page.controls.clear()
+            page.update()
+        
         key = e.key
         shift = e.shift
         ctrl = e.ctrl
@@ -701,6 +720,7 @@ def main(page: 'Page'):
             page.update()
         if alt:
             if shift:
+                global txt_passwd,dd_mode
                 if key == "D": # 更新依赖项
                     def close(e):
                         warn_ok.open = False
@@ -724,13 +744,14 @@ def main(page: 'Page'):
                     )
                     page.add(warn_ok)
                     page.update()
+                    
                 elif key == "N": # 打开Nginx配置页面
                     ngconfpage()
+                    
                 elif key == "G":
-                    global txt_passwd
+                    clrpage()
                     txt_passwd = TextField(label="在此输入您的原始密码",width=850,height=400,can_reveal_password=True,multiline=True)
                     
-                    global dd_mode
                     dd_mode = Dropdown(
                         label = "方法选择",
                         options=[
@@ -742,15 +763,16 @@ def main(page: 'Page'):
                         on_change=test_aes_create
                     )
                     btn_gen = ElevatedButton("创建",width=100,on_click=process_gen)
-                    row_top = Row(controls=[dd_mode,btn_gen])
-                    page.add(row_top,txt_passwd)
+                    global col_passwd_gen
+                    col_passwd_gen = Column(controls=[dd_mode,txt_passwd])
+                    row_top = Row(controls=[navbar,col_passwd_gen,btn_gen])
+                    page.add(row_top)
                     page.update()
                     
                 elif key == "L":
-                    global txt_passwd
+                    clrpage()
                     txt_passwd = TextField(label="在此输入您的密钥",width=850,height=400,can_reveal_password=True,multiline=True)
                     
-                    global dd_mode
                     dd_mode = Dropdown(
                         label = "方法选择",
                         options=[
@@ -762,8 +784,9 @@ def main(page: 'Page'):
                         on_change=test_aes_login
                     )
                     btn_login = ElevatedButton("登录",width=100,on_click=process_login)
-                    row_top = Row(controls=[dd_mode,btn_login])
-                    page.add(row_top,txt_passwd)
+                    col_passwd_gen = Column(controls=[dd_mode,txt_passwd])
+                    row_top = Row(controls=[navbar,col_passwd_gen,btn_login])
+                    page.add(row_top)
                     page.update()
                 '''
                 match key:
@@ -888,6 +911,6 @@ def main(page: 'Page'):
     logger.debug("页面完成初始化")
 
     PluginEntry.after_run("main", page)
-    logger.debug("总入口点已调用")
+    logger.debug("总入口点已调用完毕")
 
 app(target=main, assets_dir="assets")
