@@ -44,6 +44,7 @@ from lib.info_classes import ProgramInfo
 from lib.confctl import ConfCtl,LoadServerInfoToServer, SaveServerInfoToConf
 from lib.crypt.AES import AES_encrypt,AES_decrypt
 from lib.crypt.RSA import RSA_encrypt,RSA_decrypt
+from lib.Decorators import MSLXEvents,EventHandler,ProcessEvent,export
 
 if TYPE_CHECKING:
     from flet import Page
@@ -89,8 +90,11 @@ def main(page: 'Page'):
         programinfo.update_hitokoto()
         if programinfo.title != "":
             page.title = programinfo.title
+
         page.update()
 
+    #@export
+    @EventHandler(MSLXEvents.StartServerEvent)
     def start_server(e):
         nonlocal programinfo,current_server
         if current_server is None or txt_server_name.value is None:
@@ -101,6 +105,17 @@ def main(page: 'Page'):
             current_server.server_file = txt_server_name.value
         current_server.start()
         programinfo.running_server_list.append(current_server)
+        
+    def StartServerEvent(fe):
+        lst = ProcessEvent(MSLXEvents.StartServerEvent.value)
+        for func in lst:
+            try:
+                func(fe)
+            except Exception as e:
+                logger.error(f"执行StartServerEvents时出现错误:{e}")
+            else:
+                break
+        
 
     def create_controls():  # 设置控件
 
@@ -111,7 +126,7 @@ def main(page: 'Page'):
 
         # 开启服务器摁钮
         btn_start_server = ElevatedButton(
-            "开启服务器", width=700, on_click=start_server
+            "开启服务器", width=700, on_click=StartServerEvent
         )
         page.add(Row(
             controls=[btn_start_server],
@@ -125,7 +140,7 @@ def main(page: 'Page'):
         )
 
         global txt_server_option
-        current_server.server_options
+        current_server.convert_list2str()
         txt_server_option = TextField\
         (
             label="服务器启动参数",

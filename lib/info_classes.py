@@ -63,6 +63,14 @@ class SingleServerInfo():
             text=True,
             stdin=sp.PIPE,
         )
+
+    def convert_list2str(self):
+        self.server_option_str = ""
+        for i in self.server_options:
+            self.server_option_str += i
+
+    def convert_str2list(self):
+        self.server_options = self.server_option_str.split(' ')
         
 class ProgramInfo():
     def __init__(self,name:str="Default"):
