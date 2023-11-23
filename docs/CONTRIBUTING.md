@@ -37,7 +37,7 @@
 - 使用命令行：
    - [复刻存储库](https://docs.github.com/zh/github/getting-started-with-github/fork-a-repo#fork-an-example-repository)，以便您可以进行更改。在您准备好合并它们之前，不会影响原始项目。
      
-3. 创建一个工作分支并开始进行更改！
+2. 创建一个工作分支并开始进行更改！
 
 ### 提交您的更改
 

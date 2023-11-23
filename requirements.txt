@@ -4,5 +4,6 @@ multitasking
 psutil
 pycryptodome
 pyperclip
+pytoml
 Requests
 retry

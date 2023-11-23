@@ -5,11 +5,11 @@ from Crypto.PublicKey import RSA
 
 # ------------------------生成密钥对------------------------
 def create_rsa_pair(is_save=False):
-    '''
+    """
     创建rsa公钥私钥对
     :param is_save: default:False
     :return: public_key, private_key
-    '''
+    """
     f = RSA.generate(2048)
     private_key = f.exportKey("PEM")  # 生成私钥
     public_key = f.publickey().exportKey()  # 生成公钥

@@ -24,7 +24,7 @@ def split(start: int, end: int, step: int) -> list[tuple[int, int]]:
              for start in range(0, end, step)]
     return parts
 def get_file_size(url: str) -> int:
-    '''
+    """
     获取文件大小
     Parameters
     ----------
@@ -34,7 +34,7 @@ def get_file_size(url: str) -> int:
     ------
     文件大小（B为单位）
     如果不支持则会报错
-    '''
+    """
     try:
         #request = requests.get(url,proxies=proxy)
         request = requests.get(url)
@@ -44,7 +44,7 @@ def get_file_size(url: str) -> int:
     else:
         return math.ceil(round(int(file_size_str) / MB))
 def download(down_url: str, down_name: str, retry_times: int = 3, each_size=MB) -> None:
-    '''
+    """
     根据文件直链和文件名下载文件
     Parameters
     ----------
@@ -54,20 +54,22 @@ def download(down_url: str, down_name: str, retry_times: int = 3, each_size=MB) 
     Return
     ------
     None
-    '''
+    :param down_url:
+    :param each_size:
+    """
     f = open(down_name, 'wb')
     file_size = get_file_size(down_url)
     print(file_size)
     @retry(tries=retry_times)
     @multitasking.task
     def start_download(start: int, end: int) -> None:
-        '''
+        """
         根据文件起止位置下载文件
         Parameters
         ----------
         start : 开始位置
         end : 结束位置
-        '''
+        """
         _headers = headers.copy()
         # 分段下载的核心
         _headers['Range'] = f'bytes={start}-{end}'

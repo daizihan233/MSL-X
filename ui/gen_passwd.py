@@ -1,7 +1,7 @@
-from flet import Page,dropdown,TextField,Theme,Dropdown,ElevatedButton,Row,AlertDialog,TextButton,Text
-import pyperclip as clip
+import sys
 
-import sys,os
+from flet import Page, Theme
+
 sys.path.append("..")
 #from lib.crypt import AES_encrypt,AES_decrypt
 #from lib.crypt import RSA_encrypt,RSA_decrypt

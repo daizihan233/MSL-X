@@ -1,8 +1,9 @@
 from typing import Dict
-from loguru import logger
 
-logger.add('Logs/{time:YYYY-MM-DD}.log', format='[ {time:HH:mm:ss} ][ {level} ] {message} ', encoding='utf-8', backtrace=True, diagnose=True, compression="tar.gz" )
-class NgConf():
+from .log import logger
+
+
+class NgConf:
     def __init__(self, conf_path: str):
         self.conf_path = conf_path
         self.conf_data: Dict[str, Dict[str, str]] = {}
@@ -43,6 +44,7 @@ class NgConf():
             print(f"已向{self.conf_path}写入数据")
         except Exception as e:
             print(f"向{self.conf_path}进行数据写入失败:{e}")
+
 
 '''
 # 使用示例

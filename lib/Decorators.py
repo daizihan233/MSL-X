@@ -1,14 +1,11 @@
-import importlib
-from typing import Callable
 from enum import Enum
 
-handlers = \
-    {
-        "StartServerEvent": [],
-        "SelectHomepageEvent": [],
-        "SelectFrpcPageEvent": [],
-        "SelectAboutPageEvent": [],
-    }
+handlers = {
+    "StartServerEvent": [],
+    "SelectHomepageEvent": [],
+    "SelectFrpcPageEvent": [],
+    "SelectAboutPageEvent": [],
+}
 """
 Handlers示例
 {
@@ -43,16 +40,6 @@ class EventHandler:
 
     def __call__(self, func):
         handlers[self.Event.value].insert(0, func)
-
-
-class export:
-
-    def __init__(self) -> object:
-        pass
-
-    def __call__(func: Callable):
-        m = importlib.import_moudle("Emptiness")
-        setattr(m, func.__name__, func)
 
 
 def ProcessEvent(name: str):
