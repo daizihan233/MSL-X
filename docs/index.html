@@ -13,7 +13,7 @@
 <script>
     window.$docsify = {
       name: 'MSL-X Document',
-      nameLink: document.domain === 'localhost' ? '/':'/MSL-X/',
+      nameLink: document.URL === 'localhost' ? '/':'/',
       repo: 'MojaveHao/MSL-X',
       logo: 'logo_small.png',
       notFoundPage: true,
@@ -26,7 +26,7 @@
         placeholder: '在这里搜索',
         noData: '找不到您要的东西呢...',
         depth: 6,
-        hideOtherSidebarContent: false, 
+        hideOtherSidebarContent: false,
         namespace: 'website-1'
       }
     }
@@ -35,6 +35,8 @@
 </script>
 <!-- Docsify v4 -->
 <script src="https://unpkg.com/docsify/lib/docsify.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.js"></script>
+<script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.js"></script>
 <script src="https://unpkg.com/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 <script>
     if (typeof navigator.serviceWorker !== 'undefined') {

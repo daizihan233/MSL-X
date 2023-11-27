@@ -1,33 +1,73 @@
-# 使用前
+# MSLX使用指北
 
-> 这篇文档的Linux部分除Arch特编外皆以Ubuntu 22.04 LTS为基础
->
-> Arch特编部分如无特殊要求皆使用root用户身份执行
->
->> yay和makepkg部分请用普通用户执行(如用root则可能会对系统造成不可挽回的破坏)
->>
+## 在开始之前
 
-## 下载运行环境
+### 一些约定
+
+#### 关于运行环境
+
+操作系统(普通部分): **Ubuntu** 22.04 LTS
+
+操作系统(适用于Arch特编部分): **Archlinux** / Manjaro
+
+包管理器(普通部分): **apt** / dpkg 
+
+包管理器(适用于Arch特编部分): **pacman** / paru
+
+用户身份(通用): 有root权限的**普通**用户
+
+#### 关于你
+
+在阅读这篇文档时,你大致需要做到以下几点:
+
+1.**清楚地**了解每一条命令的意义以及可能带来的后果,我们**不会**对任何无脑行为负责
+
+2.**在需要时**请在互联网上搜索你的问题并**尝试**自己解决
+
+3.在问题发生时请保持**冷静**,这会有助于你解决问题
+
+## 配置运行环境
 
 ### Python
 
 - Linux(命令行安装，请准备好sudo/root权限)
-  现在请您先输入python --version查看现存Python版本，3.10以下都不可以运行
-- 如果您是Python2.x，请在终端输入sudo apt remove --auto-remove python2.x 来移除Python(把x换成后面的版本号)，然后按照Python3.x-Python3.10以下处理
-- 如果您是Python3.x：
 
-  - Python3.10以上可以直接跳到下载运行环境一节
-  - Python3.10以下可以查看[教程](https://cloud.tencent.com/developer/article/1565853)或自己折腾
-  - Windows/macOS(官网直接下载安装包安装)
+  现在请您先输入```python --version```查看现存Python版本，3.10以下都不可以运行
 
-    - Windows前往[这里](https://www.python.org/downloads/windows/)
-    - macOS前往[这里](https://www.python.org/downloads/macos/)
-    - Windows用户下载Windows installer(64-bit)，切记安装时要在下方勾选"Add Python 3.xx.x to Path"
-    - macOS用户下载macOS 64-bit universal2 installer
+- 如果您是Python2.x，请在终端输入sudo apt remove --auto-remove python2.x 来移除Python2(把x换成后面的版本号)，然后按照Python3.x-Python3.10以下处理
+- 如果您是Python3.x: 
+
+  - Python3.10及以上可以直接跳到下载运行环境一节
+
+  - Python3.10以下可以选择按下面的方式**升级**到Python3.10
+  
+    - 下载
+    
+    ```bash
+    sudo apt install python3.10
+    ```
+    
+    - 将软链接指向python3.10(可选)
+    
+      > 删除原有链接
+      ```bash
+      rm /usr/bin/python
+      ```
+
+      > 找到python3的安装路径
+      ```bash
+      which python3
+      ```
+      
+      > 建立新的软链接
+      ```bash
+      ln -s (上面的路径) /usr/bin/python
+      ```
+      
 
 #### Arch特编
 
-##### 您只需要运行以下命令，便可安装Python3.10：
+##### 您只需要运行以下命令，便可安装Python3.10: 
 
 ``pacman -S python``
 
@@ -35,60 +75,39 @@
 
 - 恭喜您选择了Arch Linux!
 - 由于最新版本的Arch Linux已经停止了Python3.7以前版本的支持，本文不做说明
-- 如果您希望使用Python311，请您使用AUR：
+- 如果您希望使用Python311，请您使用AUR:
 
-  - [Python311 on AUR](https://aur.archlinux.org/packages/python311)
-  - [AUR](https://wiki.archlinux.org/title/Arch_User_Repository)
-  - [Pacman](https://wiki.archlinuxcn.org/wiki/Pacman)
-- 作为一个老练的Arch Linux用户，您应该知道怎么使用
-- 使用yay
+  - 使用paru
 
-  - 安装
-
-    - 以root账户执行下列命令：
-
-      ```bash
-      pacman -S git go base-devel
-      git clone https://aur.archlinux.org/yay.git
-      cd yay
-      ```
-
-    再切换到一个非root用户来执行makepkg：
-
+    - 安装
+    
     ```bash
-    su xxx(用户名)
-    makepkg -si
+    sudo pacman -S paru-git
     ```
-  - 使用
 
-    - 它的语法和pacman一致。
-    - 示例：您可以通过以下语句来安装Python3.11:
-      ``yay -S python311``
+    - 使用
 
-### 如果您已经配置好了Python3.7(或更高)环境，请在终端执行pip install -r requirements.txt以安装依赖
+      - 它的语法和pacman一致。
+      - 示例: 您可以通过以下语句来安装Python3.11:
+        ```bash
+        paru -S python311
+        ```
 
-#### 注：此处请保证终端的路径处于我们的项目文件根目录
-
-#### 注2：如果您正在使用Linux请将pip替换为sudo pip3
+### 安装依赖
 
 ### Java
 
-> 虽然开服器本身并不需要Java，可Java是开服的必需品，所以在此一并列出其下载方式（仅针对Linux）
+> 虽然MSLX本身并不需要Java，可Java是开服的必需品，所以在此一并列出其下载方式
 
 #### 使用apt安装
 
-##### 如您的发行版可以使用apt，请按照您的情况选择命令（必须要有root权限，推荐直接复制）：
-
-- 首先，更新您的下载源:
-- ``sudo apt update && sudo apt upgrade -y``
-- Java17：``sudo apt install openjdk-17-jdk -y``
-- Java16：``sudo apt install openjdk-16-jdk -y``
-- Java8：``sudo apt install openjdk-8-jdk -y``
-- Java7：``sudo apt install openjdk-7-jdk -y``
+- 更新下载源: ``sudo apt update && sudo apt upgrade -y``
+- Java17: ``sudo apt install openjdk-17-jdk -y``
+- Java16: ``sudo apt install openjdk-16-jdk -y``
+- Java8: ``sudo apt install openjdk-8-jdk -y``
+- Java7: ``sudo apt install openjdk-7-jdk -y``
 
 #### 手动下载安装包
-
-##### 如果您的发行版使用不了apt或者上面的命令报错，请尝试在这里下载：
 
 - [Java17下载](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 - [Java16下载](https://www.oracle.com/java/technologies/javase/jdk16-archive-downloads.html)
@@ -99,16 +118,13 @@
 
 #### Arch特编
 
-希望不要滚挂:
-``pacman -Syyu``
+> 希望不要滚挂
 
-##### OpenJDK安装
-
-- JDK18(jdk18-openjdk)`<sup>`[AUR](https://aur.archlinux.org/packages/jdk18-openjdk) `</sup>`
-- JDK17(jdk-temurin)`<sup>`[AUR](https://aur.archlinux.org/packages/jdk17-temurin) `</sup>`
-- JDK16(jdk16-openjdk)`<sup>`[AUR](https://aur.archlinux.org/packages/jdk16-openjdk) `</sup>`
-- JDK8(jdk8-openjdk-shenandoah)`<sup>`[AUR](https://aur.archlinux.org/packages/jdk8-openjdk-shenandoah) `</sup>`
-- 可使用 ``yay -s (JDK名字后面的括号里的内容，不要带上括号)``来安装对应版本
+- JDK18(jdk18-openjdk)<sup>[AUR](https://aur.archlinux.org/packages/jdk18-openjdk) </sup>
+- JDK17(jdk-openjdk)<sup>[AUR](https://aur.archlinux.org/packages/jdk17-temurin) </sup>
+- JDK16(jdk16-openjdk)<sup>[AUR](https://aur.archlinux.org/packages/jdk16-openjdk) </sup>
+- JDK8(jdk8-openjdk-shenandoah)<sup>[AUR](https://aur.archlinux.org/packages/jdk8-openjdk-shenandoah) </sup>
+- 可使用 ``paru -s (括号里的内容,不要带上括号)``来安装对应版本
 
 环境配置至此完成
 
@@ -134,11 +150,7 @@
 
 ### 使用自定义域名
 
-您得先有一个域名，然后参照以下教程：
-
-- [阿里云](https://doc.natfrp.com/#/app/mc?id=srv-aliyun)
-- [腾讯云](https://doc.natfrp.com/#/app/mc?id=srv-tencent)
-- [CloudFlare](https://doc.natfrp.com/#/app/mc?id=srv-cloudflare)
+参考[SakuraFrp的文档](https://doc.natfrp.com/app/mc.html#srv)
 
 ### 常用指令
 
@@ -151,49 +163,49 @@
 
 ``str``代表一串字符
 
-`bool`代表您只能选择True(是)或者Flase(否)作为值
+`bool`代表您只能选择True(是)或者False(否)作为值
 
-| 类型     | 名称                                  | 释义                                                                                     |
-| -------- | ------------------------------------- | --------------------------------------------------------------------------------------- |
-| `bool`   | `sync-chunk-writes`                 | 为true时区块文件以同步模式写入(跟本地一样加载)                                               |
-| `bool`   | `force-gamemode`                    | 强制玩家加入时为默认游戏模式                                                                |
-| `bool`   | `allow-nether`                      | 是否允许下界                                                                               |
-| `bool`   | `enforce-whitelist`                 | 在服务器上强制使用白名单                                                                    |
-| `bool`   | `spawn-monsters`                    | 生成攻击型生物（怪物）                                                                      |
-| `bool`   | `pvp`                               | 是否允许玩家互相攻击                                                                        |
-| `bool`   | `hardcore`                          | 极限模式（死后自动封禁）                                                                    |
-| `bool`   | `enable-command-block`              | 启用命令方块                                                                               |
-| `bool`   | `spawn-npcs`                        | 是否生成村民和其他NPC                                                                       |
-| `bool`   | `allow-flight`                      | 是否允许玩家飞行                                                                            |
-| `bool`   | `generate-structures`               | 生成世界时生成结构（如村庄）禁止后地牢和地下要塞仍然生成                                       |
-| `bool`   | `online-mode`                       | Minecraft正版验证                                                                          |
-| `bool`   | `white-list`                        | 是否开启白名单                                                                             |
-| `bool`   | `prevent-proxy-connections`         | 是否允许玩家使用网络代理进入服务器                                                           |
-| `bool`   | `use-native-transport`              | 是否使用针对Linux平台的数据包收发优化 (仅Linux)                                              |
-| `int`    | `spawn-protection`                  | 通过将该值进行 2x+1 的运算来决定出生点的保护半径，设置为0将只保护出生点下方那一个方块。          |
-| `int`    | `max-tick-time`                     | 设置每个tick花费的最大毫秒数，超时会报错”Can't keep up!“                                     |
-| `int`    | `query.port`                        | 服务器的端口号                                                                             |
-| `int`    | `gamemode`                          | 默认游戏模式 [0生存 1创造 2冒险 3旁观]                                                      |
-| `int`    | `player-idle-timeout`               | 允许的挂机时间，单位为分钟，超过后自动踢出                                                    |
-| `int`    | `difficulty`                        | 世界难度 [0和平 1简单 2普通 3困难]                                                          |
-| `int`    | `op-permission-level`               | OP权限等级                                                                                 |
-| `int`    | `entity-broadcast-range-percentage` | 实体渲染范围百分比                                                                          |
-| `int`    | `max-players`                       | 服务器最大玩家数限制                                                                        |
-| `int`    | `network-compression-threshold`     | 网络压缩阈值                                                                               |
-|          |                                     | -1 代表禁用压缩                                                                            |
-|          |                                     | 0 代表全部压缩                                                                             |
-|          |                                     | 数字越大越节省带宽，但同时也会加重CPU负担                                                    |
-| `int`    | `max-world-size`                    | 最大世界大小                                                                               |
-| `int`    | `function-permission-level`         | 设定函数的默认权限等级                                                                      |
-| `int`    | `server-port`                       | 服务器端口                                                                                 |
-| `int`    | `server-ip`                         | 服务器ip，若不绑定请留空                                                                    |
-| `int`    | `view-distance`                     | 服务器发送给客户端的数据量，决定玩家能设置的视野                                              |
-| `int`    | `level-seed`                        | 地图种子                                                                                   |
-| `str`    | `generator-settings`                | 用于自定义超平坦世界的生成                                                                  |
-| `str`    | `level-type`                        | 地图的生成类型                                                                             |
-| `str`    | `level-name`                        | 地图名称，不要使用中文                                                                      |
-| `str`    | `resource-pack`                     | 统一资源标识符 (URI) 指向一个资源包。玩家可选择是否使用                                        |
-| `str`    | `motd`                              | 服务器信息展示 （MOTD）                                                                     |
+| 类型     | 名称                                  | 释义                                              |
+|--------|-------------------------------------|-------------------------------------------------|
+| `bool` | `sync-chunk-writes`                 | 为true时区块文件以同步模式写入(跟本地一样加载)                      |
+| `bool` | `force-gamemode`                    | 强制玩家加入时为默认游戏模式                                  |
+| `bool` | `allow-nether`                      | 是否允许下界                                          |
+| `bool` | `enforce-whitelist`                 | 在服务器上强制使用白名单                                    |
+| `bool` | `spawn-monsters`                    | 生成攻击型生物（怪物）                                     |
+| `bool` | `pvp`                               | 是否允许玩家互相攻击                                      |
+| `bool` | `hardcore`                          | 极限模式（死后自动封禁）                                    |
+| `bool` | `enable-command-block`              | 启用命令方块                                          |
+| `bool` | `spawn-npcs`                        | 是否生成村民和其他NPC                                    |
+| `bool` | `allow-flight`                      | 是否允许玩家飞行                                        |
+| `bool` | `generate-structures`               | 生成世界时生成结构（如村庄）禁止后地牢和地下要塞仍然生成                    |
+| `bool` | `online-mode`                       | Minecraft正版验证                                   |
+| `bool` | `white-list`                        | 是否开启白名单                                         |
+| `bool` | `prevent-proxy-connections`         | 是否允许玩家使用网络代理进入服务器                               |
+| `bool` | `use-native-transport`              | 是否使用针对Linux平台的数据包收发优化 (仅Linux)                  |
+| `int`  | `spawn-protection`                  | 通过将该值进行 2x+1 的运算来决定出生点的保护半径，设置为0将只保护出生点下方那一个方块。 |
+| `int`  | `max-tick-time`                     | 设置每个tick花费的最大毫秒数，超时会报错”Can't keep up!“          |
+| `int`  | `query.port`                        | 服务器的端口号                                         |
+| `int`  | `gamemode`                          | 默认游戏模式 [0生存 1创造 2冒险 3旁观]                        |
+| `int`  | `player-idle-timeout`               | 允许的挂机时间，单位为分钟，超过后自动踢出                           |
+| `int`  | `difficulty`                        | 世界难度 [0和平 1简单 2普通 3困难]                          |
+| `int`  | `op-permission-level`               | OP权限等级                                          |
+| `int`  | `entity-broadcast-range-percentage` | 实体渲染范围百分比                                       |
+| `int`  | `max-players`                       | 服务器最大玩家数限制                                      |
+| `int`  | `network-compression-threshold`     | 网络压缩阈值                                          |
+|        |                                     | -1 代表禁用压缩                                       |
+|        |                                     | 0 代表全部压缩                                        |
+|        |                                     | 数字越大越节省带宽，但同时也会加重CPU负担                          |
+| `int`  | `max-world-size`                    | 最大世界大小                                          |
+| `int`  | `function-permission-level`         | 设定函数的默认权限等级                                     |
+| `int`  | `server-port`                       | 服务器端口                                           |
+| `int`  | `server-ip`                         | 服务器ip，若不绑定请留空                                   |
+| `int`  | `view-distance`                     | 服务器发送给客户端的数据量，决定玩家能设置的视野                        |
+| `int`  | `level-seed`                        | 地图种子                                            |
+| `str`  | `generator-settings`                | 用于自定义超平坦世界的生成                                   |
+| `str`  | `level-type`                        | 地图的生成类型                                         |
+| `str`  | `level-name`                        | 地图名称，不要使用中文                                     |
+| `str`  | `resource-pack`                     | 统一资源标识符 (URI) 指向一个资源包。玩家可选择是否使用                 |
+| `str`  | `motd`                              | 服务器信息展示 （MOTD）                                  |
 
 - 更多详见[Minecraft Wiki](https://minecraft.fandom.com/zh/wiki/Server.properties?variant=zh)
 
@@ -201,7 +213,7 @@
 
 #### 什么是Nginx
 
-Nginx (读作"engine X") 由Igor Sysoev(俄罗斯)于2005年编写，是一个免费、开源、高性能的HTTP服务器和反向代理，也可以作为一个IMAP/POP3代理服务器。Nginx因为稳定，丰富的功能集，配置简单，资源占用低而闻名世界。
+Nginx (读作"engine X") 由Igor Sysoev(俄)于2005年编写，是一个免费、开源、高性能的HTTP服务器和反向代理，也可以作为一个IMAP/POP3代理服务器。Nginx因为稳定，丰富的功能集，配置简单，资源占用低而闻名世界。
 
 #### 安装
 
@@ -295,7 +307,7 @@ nginx -V
 ##### 编译安装
 
 Archlinux下编译安装的方法基本和Ubuntu一致。
-可以这么启动nginx：
+可以这么启动nginx: 
 
 ```bash
 cd /usr/local/nginx/sbin && ./nginx
@@ -310,7 +322,7 @@ Code by MojaveHao
 
 Copyright MojaveHao
 
-Open Source License:GNU Affero Genral Public License v3([View at there](https://www.gnu.org/licenses/agpl-3.0.en.html))
+Open Source License:GNU Affero General Public License v3([View at there](https://www.gnu.org/licenses/agpl-3.0.en.html))
 
 ## More
 

@@ -28,21 +28,32 @@ from flet import (
     MainAxisAlignment,
 )
 
-import Decorators
-import PluginEntry_Beta as PluginEntry
-import ui.confcl as CreateConf
-import ui.frpconfig as FrpConfig
-import ui.logs as logs
-import ui.nginxconf as NginxConfUI
-import ui.settings as Settings
-from lib.Decorators import MSLXEvents, EventHandler, ProcessEvent
-from lib.confctl import ConfCtl, LoadServerInfoToServer, SaveServerInfoToConf
+import PluginEntry
+from ui import (
+    confcl,
+    frpconfig,
+    logs,
+    nginxconf,
+    settings
+)
+from ui.Navbar import nav_side as navbar
+
+from lib.Decorators import (
+    MSLXEvents,
+    EventHandler,
+    GetEventHandlers,
+    handlers as program_handlers
+)
+from lib.confctl import (
+    ConfCtl,
+    LoadServerInfoToServer,
+    SaveServerInfoToConf
+)
 from lib.crypt.AES import AES_encrypt
 from lib.crypt.RSA import RSA_encrypt
 from lib.info_classes import ProgramInfo
 from lib.log import logger
-# from loguru import logger
-from ui.Navbar import nav_side as navbar
+
 
 if TYPE_CHECKING:
     from flet import Page
@@ -98,7 +109,7 @@ def main(page: 'Page'):
         programinfo.running_server_list.append(current_server)
 
     def StartServerEvent(fe):
-        lst = ProcessEvent(MSLXEvents.StartServerEvent.value)
+        lst = GetEventHandlers(MSLXEvents.StartServerEvent.value)
         for func in lst:
             try:
                 func(fe)
@@ -581,7 +592,7 @@ def main(page: 'Page'):
         assert page.controls is not None
         page.controls.clear()
         page.update()
-        NginxConfUI.init_page(page)
+        nginxconf.init_page(page)
         global txt_pathto
         txt_pathto = TextField(label="Nginx路径", height=400, multiline=True)
         btn_confirm = ElevatedButton("确认", on_click=ident_path)
@@ -816,8 +827,8 @@ def main(page: 'Page'):
         @EventHandler(MSLXEvents.SelectFrpcPageEvent)
         def frpcpage():
             clrpage()
-            FrpConfig.init_page(page)
-            FrpConfig.create_controls(page)
+            frpconfig.init_page(page)
+            frpconfig.create_controls(page)
             page.update()
 
         def opendoc():
@@ -839,13 +850,13 @@ def main(page: 'Page'):
 
         def settingspage():
             clrpage()
-            Settings.init_page(page)
-            Settings.create_controls(page)
+            settings.init_page(page)
+            settings.create_controls(page)
             page.update()
 
         def cconfigpage():
             clrpage()
-            CreateConf.init_page(page)
+            confcl.init_page(page)
             btn_save_config = ElevatedButton("保存服务器配置", on_click=save_config)
             btn_load_config = ElevatedButton("加载服务器配置", on_click=load_config)
             page.add(
@@ -861,7 +872,7 @@ def main(page: 'Page'):
                 logspage()
             case 2:
                 # frpcpage()
-                for func in (handler := ProcessEvent(MSLXEvents.SelectFrpcPageEvent.value)):
+                for func in (handler := GetEventHandlers(MSLXEvents.SelectFrpcPageEvent.value)):
                     logger.debug(handler)
                     try:
                         func()
@@ -891,7 +902,7 @@ def main(page: 'Page'):
     # logger.debug(f"插件注册的Handler:{Plugins.PluginList.handlers}")
     # logger.debug(f"程序内的的Handler:{Decorators.handlers}")
     PluginEntry.merge_events()
-    logger.debug(f"合并Handlers完成,现在的Handler:{Decorators.handlers}")
+    logger.debug(f"合并Handlers完成,现在的Handler:{program_handlers}")
 
 
 app(target=main, assets_dir="assets")

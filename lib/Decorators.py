@@ -42,6 +42,6 @@ class EventHandler:
         handlers[self.Event.value].insert(0, func)
 
 
-def ProcessEvent(name: str):
+def GetEventHandlers(name: str):
     if name in handlers.keys():
         return handlers.get(name)

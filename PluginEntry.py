@@ -5,7 +5,8 @@ from typing import Callable, Dict, Any
 
 import Decorators
 from Plugins import *  # type: ignore
-from Plugins.PluginList import handlers as PluginHandlers, Pluginlist
+from Plugins.tools.InfoClasses import handlers as PluginHandlers
+from Plugins.tools.PluginList import Pluginlist
 from lib.Decorators import handlers as origin_handlers
 from lib.log import logger
 
