@@ -13,7 +13,10 @@
 <script>
     window.$docsify = {
       name: 'MSL-X Document',
-      nameLink: document.URL === 'localhost' ? '/':'/#/README',
+      nameLink: {
+          '/': '/',
+          '/Developing/': '/Developing/',
+      },
       repo: 'MojaveHao/MSL-X',
       logo: 'logo_small.png',
       notFoundPage: true,
