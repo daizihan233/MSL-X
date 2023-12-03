@@ -109,10 +109,7 @@
 
 #### 手动下载安装包
 
-- [Java17下载](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-- [Java16下载](https://www.oracle.com/java/technologies/javase/jdk16-archive-downloads.html)
-- [Java8下载](https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html)
-- [Java7下载](https://www.oracle.com/java/technologies/javase/javase7-archive-downloads.html)
+- [Oracle官网](https://www.oracle.com/java/technologies/downloads/archive/)
 - [Deepin安装Java17示例](https://bbs.deepin.org/post/236160)
 - [命令行安装deb包教程](https://blog.csdn.net/oMcLin/article/details/108725325)
 
@@ -315,14 +312,19 @@ cd /usr/local/nginx/sbin && ./nginx
 
 # 关于
 
-[![OSCS Status](https://www.oscs1024.com/platform/badge/MojaveHao/MSL-X.svg?size=large)](https://old.murphysec.com/dr/uKTcHf4KwdbSC0tFFC)
+[![Security Status](https://www.murphysec.com/platform3/v31/badge/1731219173459054592.svg)](https://www.murphysec.com/console/report/1731219173408722944/1731219173459054592)
 
-MSLX
-Code by MojaveHao
+MSLX 0.0.8b
 
-Copyright MojaveHao
+Copyleft MojaveHao
 
-Open Source License:GNU Affero General Public License v3([View at there](https://www.gnu.org/licenses/agpl-3.0.en.html))
+GNU Affero General Public License v3([View at there](https://www.gnu.org/licenses/agpl-3.0.en.html))
+
+## 特别感谢
+
+[MemoryShadow](https://github/com/MemoryShadow)
+
+[裕依2439](https://github.com/yuyi2439)
 
 ## More
 

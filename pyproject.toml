@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msl-x"
-version = "0.0.7b"
+version = "0.0.8b"
 description = ""
 authors = ["MojaveHao <HTTcode2020@126.com>"]
 license = "AGPL-3.0-only"

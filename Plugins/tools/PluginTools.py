@@ -1,19 +1,7 @@
-from .InfoClasses import handlers, UniversalInfo
+from .InfoClasses import UniversalInfo
 from .Exceptions import WrongInfoTypeError, NullEntrypointError
 from lib.log import logger
 from typing import Optional
-
-
-class EventHandler:
-
-    def __init__(self, info: UniversalInfo):
-        if info.type == "EventHandler":
-            self.Event = info.on
-        else:
-            raise WrongInfoTypeError(info.name, info.type, "EventHandler")
-
-    def __call__(self, func):
-        handlers[self.Event.value].insert(0, func)
 
 
 class AddPluginInfo:  # 接受通用信息类的新版修饰器
