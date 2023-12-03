@@ -840,7 +840,7 @@ def main(page: 'Page'):
                 page.update()
 
             about = AlertDialog(
-                title=Text("MSLX Beta 0.08"),
+                title=Text("MSLX Beta 0.08(0.0.8b)"),
                 actions=[TextButton("确认", on_click=close)],
                 modal=True,
                 open=True,
